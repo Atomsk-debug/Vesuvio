@@ -36,7 +36,7 @@ public final class VesuvioUi {
 
 	/** Flips the master switch, saves it and says so above the hotbar. */
 	public static void toggleMaster(Minecraft mc) {
-		// A key press has stopped a running benchmark already (KeyboardHandlerMixin); this is for any other way in.
+		// A key press has stopped a running benchmark already (InputUiMixin); this is for any other way in.
 		VesuvioBenchmark.stop(VesuvioBenchmark.Stop.OTHER);
 		boolean on = !VesuvioConfig.ENABLED.get();
 		VesuvioConfig.ENABLED.set(on);

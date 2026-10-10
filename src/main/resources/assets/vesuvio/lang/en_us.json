@@ -30,9 +30,9 @@
 	"vesuvio.toggle.on": "Vesuvio: on",
 	"vesuvio.toggle.off": "Vesuvio: off",
 	"key.category.vesuvio.main": "Vesuvio",
-	"key.vesuvio.toggle": "Switch Etna Vesuvio on/off",
+	"key.vesuvio.toggle": "Switch Vesuvio on/off",
 	"vesuvio.benchmark.button": "Run benchmark",
-	"vesuvio.benchmark.tooltip": "Measures fps with Etna Vesuvio off, on, and with each optimization switched off in turn (each switch on the other pages that needs no restart), then on and off again. Stand still somewhere typical and don't touch anything: any key, click, move or menu stops it and puts your settings back. The results show at the end and go to latest.log.",
+	"vesuvio.benchmark.tooltip": "Measures fps with Vesuvio off, on, and with each optimization changed in turn (each setting on the other pages that needs no restart: a switch is flipped, a number such as Leaf Culling goes to 0), then on and off again. Stand still somewhere typical and don't touch anything: any key, click, move or menu stops it and puts your settings back. The results show at the end and go to latest.log.",
 	"vesuvio.benchmark.noWorld": "Join a world first: the benchmark measures the game as you play it.",
 	"vesuvio.benchmark.started": "Vesuvio benchmark: %s steps, about %s s. Stand still and don't touch anything; any key stops it.",
 	"vesuvio.benchmark.stopped": "Vesuvio benchmark stopped (%s); settings put back.",
@@ -52,5 +52,5 @@
 	"vesuvio.benchmark.col.frame": "ms",
 	"vesuvio.benchmark.col.p95": "p95 ms",
 	"vesuvio.benchmark.col.vsOn": "vs on",
-	"vesuvio.benchmark.footer": "vs on: ms per frame compared with Etna Vesuvio on; + means what the step switched off was saving time."
+	"vesuvio.benchmark.footer": "vs on: ms per frame compared with Vesuvio on; + means what the step switched off was saving time."
 }
