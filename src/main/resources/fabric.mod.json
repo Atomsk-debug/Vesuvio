@@ -23,7 +23,8 @@
 		"vesuvio.entities.mixins.json",
 		"vesuvio.frame.mixins.json",
 		"vesuvio.ticks.mixins.json",
-		"vesuvio.chunks.mixins.json"
+		"vesuvio.chunks.mixins.json",
+		"vesuvio.clears.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.19.5",

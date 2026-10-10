@@ -21,6 +21,7 @@ effect the next time the game starts; all others apply live.
 | Face Culling (`faceCulling`) | On | Skips terrain faces that point away from you before the graphics card works on them. |
 | Face Culling: Split From (`faceCullingMinGap`) | 64 | How many hidden faces are worth one extra draw call. Lower skips more faces but costs more CPU. |
 | Fewer Water/Glass Re-sorts (`translucentSortThrottle`) | On | Far see-through sections are re-sorted only after you have moved far enough for it to matter. |
+| Clear Fusion (`clearFusion`) | On | A clear followed by drawing into the same picture becomes part of that drawing (one full write and read less), clears nothing can see are skipped, and post effects get no depth buffers they never read. Same picture. Counters: clears fused, dropped, split. |
 
 ## Entities
 

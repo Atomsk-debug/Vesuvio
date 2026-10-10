@@ -23,6 +23,7 @@ public final class Vesuvio implements ClientModInitializer {
 		it.cosimo.vesuvio.frame.FrameBoost.init();
 		WorldTicks.init();
 		it.cosimo.vesuvio.chunks.ChunkUpdates.init();
+		it.cosimo.vesuvio.clears.ClearFusion.init();
 		VesuvioConfig.save();
 		LOGGER.info("Vesuvio {} ready, {} settings, optimizations {}",
 				FabricLoader.getInstance().getModContainer("vesuvio").map(c -> c.getMetadata().getVersion()

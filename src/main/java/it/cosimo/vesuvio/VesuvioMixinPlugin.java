@@ -23,6 +23,11 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 			Map.entry("ResortThrottleMixin", List.of("RenderSectionStateMixin")),
 			Map.entry("ExtractSchedulingMixin", List.of("RenderSectionInvoker")),
 			Map.entry("UberBufferBudgetMixin", List.of("StagedEntryAccessor", "StagingBufferAccessor")),
+			// clears: holding a clear back is only safe with every hook that sends, splits or drops it
+			Map.entry("ClearsFrontendEncoderMixin", List.of("ClearsFrontendRenderPassMixin", "ClearsFrontendSurfaceMixin",
+					"ClearsVulkanEncoderAccessor", "ClearsVulkanEncoderMixin", "ClearsVulkanTextureMixin")),
+			Map.entry("ClearsFrontendRenderPassMixin", List.of("ClearsVulkanEncoderAccessor")),
+			Map.entry("ClearsPostChainMixin", List.of("ClearsPostPassAccessor")),
 			// entities
 			Map.entry("LevelExtractorMixin", List.of("EntityCullStateMixin", "BlockEntityCullStateMixin",
 					"EntityRendererInvoker", "FrustumInvoker")),
