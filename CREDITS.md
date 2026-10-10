@@ -23,3 +23,7 @@ Ideas only, no code copied:
     detector, block shape and block state cache deduplication, resource location deduplication.
   - ModernFix by embeddedt (LGPL, https://github.com/embeddedt/ModernFix): computing wall shapes once and sharing
     them between wall blocks (here also fences, panes and bars).
+
+- Per-direction face culling of terrain sections (`it.cosimo.vesuvio.faces`): sorting each section's quads by
+  the way they face when it is built, and drawing only the facings that can face the camera. Idea from Sodium
+  (PolyForm Shield); no Sodium code was read or copied.

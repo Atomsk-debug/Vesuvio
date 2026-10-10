@@ -60,5 +60,9 @@
 	"vesuvio.option.memoryShareStateTables": "Share Block State Tables",
 	"vesuvio.option.memoryShareStateTables.tooltip": "Block states with the same face-support and face-occlusion tables share one table. Saves about 1.5 MB. No visual or gameplay change. Needs a restart.",
 	"vesuvio.option.memoryShareIdNamespaces": "Share Id Names",
-	"vesuvio.option.memoryShareIdNamespaces.tooltip": "Ids read from game files and the network (\"minecraft:stone\") share one \"minecraft\" text instead of each keeping a copy. Saves about 1 MB. No visual or gameplay change. Needs a restart."
+	"vesuvio.option.memoryShareIdNamespaces.tooltip": "Ids read from game files and the network (\"minecraft:stone\") share one \"minecraft\" text instead of each keeping a copy. Saves about 1 MB. No visual or gameplay change. Needs a restart.",
+	"vesuvio.option.faceCulling": "Face Culling",
+	"vesuvio.option.faceCulling.tooltip": "Skips the faces of terrain that point away from you before the graphics card works on them (it would throw them away later anyway), saving about half the vertex work of the terrain. The picture does not change. Live: sections built while it was off are rebuilt in the background over a few seconds.",
+	"vesuvio.option.faceCullingMinGap": "Face Culling: Split From",
+	"vesuvio.option.faceCullingMinGap.tooltip": "How many hidden faces in the middle of a section are worth one extra draw call to skip. Lower skips more faces but adds draw calls (CPU time); higher keeps draws down. Hidden faces at either end of a section are always skipped for free. No look change, live."
 }
