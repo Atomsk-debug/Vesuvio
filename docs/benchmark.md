@@ -19,8 +19,13 @@ General page changed on its own (a switch flipped, a number set to its lowest va
 far the two "on" (or "off") steps land apart is the noise; differences smaller than that mean nothing.
 
 The results table in `latest.log` has, per step: fps, mean frame time, 95th percentile frame time, the difference
-from "on" in ms (a positive number means what that step switched off was saving time) and the game's own CPU
-frame time. The settings are never saved during a run.
+from "on" in ms (a positive number means what that step switched off was saving time), the game's own CPU
+frame time, and the end of the frame split in two: **encode**, ms per frame inside `vkQueueSubmit` (on macOS with
+MoltenVK this is where the frame is turned into Metal commands, and where it waits for the screen with VSync on;
+with Asynchronous Submit on it moves to another thread and this column only shows the hand-over), and **wait**, ms
+per frame waiting for the graphics card to finish the frame before last (large when the graphics card is the
+limit, near zero when the CPU is). The same two numbers, averaged over the last second, are on F3 as
+`submit encode us` and `submit wait us`. The settings are never saved during a run.
 
 ## Tips for a fair run
 * Use the same window mode each time (exclusive fullscreen is faster on macOS than a normal fullscreen window).

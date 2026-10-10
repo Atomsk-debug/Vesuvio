@@ -5,9 +5,11 @@
 	"compatibilityLevel": "JAVA_25",
 	"client": [
 		"CompiledSectionMeshMixin",
+		"LevelRendererDrawCacheMixin",
 		"LevelRendererFacesMixin",
 		"SectionCompilerMixin",
-		"SectionCompilerResultsMixin"
+		"SectionCompilerResultsMixin",
+		"UberAllocationsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

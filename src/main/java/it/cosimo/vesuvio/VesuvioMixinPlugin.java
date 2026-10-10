@@ -35,6 +35,9 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 			// faces
 			Map.entry("SectionCompilerMixin", List.of("SectionCompilerResultsMixin")),
 			Map.entry("CompiledSectionMeshMixin", List.of("SectionCompilerResultsMixin")),
+			// Without the allocation counter the cache could hand back stale lists; without the main-view mark it
+			// never serves anything.
+			Map.entry("LevelRendererDrawCacheMixin", List.of("UberAllocationsMixin", "LevelRendererFacesMixin")),
 			// frame
 			Map.entry("FrameSectionCompilerMixin", List.of("FrameSectionResultsMixin")),
 			Map.entry("FrameCompiledSectionMeshMixin", List.of("FrameSectionResultsMixin")),

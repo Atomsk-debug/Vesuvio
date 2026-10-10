@@ -3,9 +3,11 @@ package it.cosimo.vesuvio.faces;
 import java.util.List;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.mojang.renderpearl.util.PlatformUtil;
 
 import it.cosimo.vesuvio.VesuvioConfig;
 import it.cosimo.vesuvio.Vesuvio;
+import it.cosimo.vesuvio.draws.SubmitTimers;
 import it.cosimo.vesuvio.ui.VesuvioStats;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DynamicGpuData;
@@ -32,6 +34,15 @@ import net.minecraft.world.phys.Vec3;
  * one more Metal draw per section), so it is left out only when it has at least faceCullingMinGap quads,
  * otherwise drawn with the rest.
  *
+ * <p>faceCullingMinGap is how many hidden quads are worth one more draw when the GPU's time is what counts. With
+ * faceCullingAutoSplit on (default), on macOS that holds only while the GPU is the limit: MoltenVK turns every
+ * draw into a Metal draw on the CPU (about 1 us each), so while the CPU is the limit a split costs frame time and
+ * the vertex work it saves on the idle GPU buys nothing; there the effective value is the highest one (no draw is
+ * ever split, the hidden ends are still left out). Which side is the limit comes from the submit timers
+ * (SubmitTimers.gpuBound: at least 10% of the frame spent waiting for the GPU, decided once a second). On
+ * Windows and Linux the drivers draw an indirect batch as one command and the value applies as set. Any split
+ * choice draws the same picture.
+ *
  * <p>Only vanilla's own main-view call is cut (LevelRendererFacesMixin wraps the two prepare calls in
  * LevelRenderer.render). Any other caller, Etna's shadow pass included, gets whole meshes unless it asks
  * for culling along a direction with {@link #cullNextPrepareTowards}.
@@ -40,6 +51,8 @@ public final class FaceCulling {
 	public static final VesuvioConfig.Toggle FACE_CULLING = VesuvioConfig.toggle("rendering", "faceCulling", true, false);
 	/** A hidden run of quads between two drawn ones is skipped (at the price of one more draw) only from this many quads. */
 	public static final VesuvioConfig.Number MIN_GAP = VesuvioConfig.number("rendering", "faceCullingMinGap", 0, 65536, 64, false);
+	/** On macOS, splits only while the GPU is the limit (see the class comment); faceCullingMinGap as set everywhere else. */
+	public static final VesuvioConfig.Toggle AUTO_SPLIT = VesuvioConfig.toggle("rendering", "faceCullingAutoSplit", true, false);
 
 	// Counters for the settings screen and benchmark (render thread). Main view, last frame:
 	/** Opaque terrain quads left out of the main view's draws. */
@@ -77,6 +90,8 @@ public final class FaceCulling {
 	private static final boolean[] armedLayers = new boolean[LAYERS.length];
 
 	private static int mode = NONE;
+	/** {@link #mainViewKey} as the last main-view prepare used it. */
+	private static long lastMainViewKey;
 	private static int directionalMask;
 	private static final boolean[] layerOn = new boolean[LAYERS.length];
 	private static int minGap;
@@ -98,6 +113,101 @@ public final class FaceCulling {
 		// F3, the settings screen's box, the stats log and the benchmark's counter table.
 		VesuvioStats.register("terrain quads skipped %", FaceCulling::skippedPercent);
 		VesuvioStats.register("face draws added", () -> drawsAddedLastFrame);
+		SectionDrawCache.init();
+	}
+
+	/**
+	 * The split threshold for this frame: faceCullingMinGap, or on macOS with faceCullingAutoSplit while the CPU is
+	 * the limit, the highest value (no splits). Render thread.
+	 */
+	static int effectiveMinGap() {
+		if (PlatformUtil.IS_MACOS && AUTO_SPLIT.on() && !SubmitTimers.gpuBound()) {
+			return MIN_GAP.max;
+		}
+		return MIN_GAP.get();
+	}
+
+	/** Inside vanilla's own main-view prepare call (SectionDrawCache only serves that one). */
+	static boolean inMainView() {
+		return mainViewCall;
+	}
+
+	/**
+	 * Everything besides the camera that decides how a main-view prepare cuts its draws: 0 with face culling off,
+	 * else on plus the split threshold. Render thread, inside the main-view call.
+	 */
+	static long mainViewKey() {
+		return FACE_CULLING.on() ? (1L << 32) | effectiveMinGap() : 0L;
+	}
+
+	/** {@link #mainViewKey} as the last main-view prepare computed it. */
+	static long lastMainViewKey() {
+		return lastMainViewKey;
+	}
+
+	/**
+	 * The main view's camera, reduced to what decides the facing groups shown ({@link #mainMask}): per axis, the
+	 * first section index whose positive-facing group is hidden and the first whose negative-facing group is shown.
+	 * Two cameras with the same six numbers give every section the same mask. False when the camera is not a usable
+	 * number. Render thread, inside the main-view call.
+	 */
+	static boolean cameraCell(int[] out) {
+		out[0] = firstHiddenPositive(camX);
+		out[1] = firstShownNegative(camX);
+		out[2] = firstHiddenPositive(camY);
+		out[3] = firstShownNegative(camY);
+		out[4] = firstHiddenPositive(camZ);
+		out[5] = firstShownNegative(camZ);
+		for (int i = 0; i < 6; i++) {
+			if (out[i] == Integer.MIN_VALUE) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * The smallest k for which a section with origin 16k along this axis gets no positive-facing group from
+	 * {@link #mainMask} (the test there, {@code cam - origin > -MARGIN}, is true for small k and false from here on).
+	 */
+	private static int firstHiddenPositive(double cam) {
+		if (!(Math.abs(cam) < 1.0E8)) {
+			return Integer.MIN_VALUE;
+		}
+		int k = (int) Math.ceil((cam + MARGIN) / 16.0);
+		while (!(cam - (double) (16 * (k - 1)) > -MARGIN)) {
+			k--;
+		}
+		while (cam - (double) (16 * k) > -MARGIN) {
+			k++;
+		}
+		return k;
+	}
+
+	/**
+	 * The smallest k for which a section with origin 16k gets its negative-facing group ({@code cam - origin <
+	 * 16 + MARGIN} in {@link #mainMask}: false for small k, true from here on).
+	 */
+	private static int firstShownNegative(double cam) {
+		if (!(Math.abs(cam) < 1.0E8)) {
+			return Integer.MIN_VALUE;
+		}
+		int k = (int) Math.floor((cam - 16.0 - MARGIN) / 16.0) + 1;
+		while (cam - (double) (16 * (k - 1)) < 16.0 + MARGIN) {
+			k--;
+		}
+		while (!(cam - (double) (16 * k) < 16.0 + MARGIN)) {
+			k++;
+		}
+		return k;
+	}
+
+	/** A main-view prepare served from SectionDrawCache: puts back the counters its cached build published. */
+	static void restoreMainViewCounters(int skippedQuads, int drawnQuads, int addedDraws) {
+		quadsSkippedLastFrame = skippedQuads;
+		quadsDrawnLastFrame = drawnQuads;
+		drawsAddedLastFrame = addedDraws;
+		ungroupedSectionsLastFrame = 0;
 	}
 
 	/** Share of the main view's opaque terrain quads left out last frame, in percent. */
@@ -169,10 +279,11 @@ public final class FaceCulling {
 		added = 0;
 		ungrouped = 0;
 		regroupCount = 0;
-		minGap = MIN_GAP.get();
+		minGap = effectiveMinGap();
 		boolean on = FACE_CULLING.on();
 		if (mainViewCall) {
 			mode = on ? MAIN : NONE;
+			lastMainViewKey = on ? (1L << 32) | minGap : 0L;
 			for (ChunkSectionLayer layer : LAYERS) {
 				layerOn[layer.ordinal()] = on && !layer.translucent() && culls(layer);
 			}
