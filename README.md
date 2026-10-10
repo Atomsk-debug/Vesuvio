@@ -40,6 +40,9 @@ Made first for Apple Silicon Macs (MoltenVK), and meant to work on Windows and L
 * Smaller block-state tables: less memory, fewer pauses for garbage collection.
 * Faster world ticking in single player, with the game's rules exactly as in vanilla: same redstone, same
   mobs, same farms.
+* Smoother chunk loading: chunks are built nearest first, a few at a time, and sent to the graphics card
+  within a time budget, so joining a world or flying over new terrain no longer brings long frames; empty sky
+  sections are not built at all.
 
 ## Install
 

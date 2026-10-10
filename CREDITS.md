@@ -48,3 +48,7 @@ Ideas only, no code copied:
   Lithium's ai.poi (LGPL-3.0); own code.
 - Suffocation check without streams (`ticks/mixin/EntitySuffocationMixin`): idea from Lithium's
   entity.fast_suffocation_check (LGPL-3.0); own code.
+- Chunk update scheduling (`it.cosimo.vesuvio.chunks`): handing the build threads a bounded, nearest-first batch
+  each frame, a per-frame time budget for mesh uploads and distance-based translucent re-sort triggers follow ideas
+  from Sodium's chunk build system (PolyForm Shield: ideas only) and C2ME; skipping all-air sections, trimming the
+  block entities of section copies and the newest-mesh-wins check are Vesuvio's own. All code is Vesuvio's own.
