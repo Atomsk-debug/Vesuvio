@@ -2,7 +2,7 @@ package it.cosimo.vesuvio.frame;
 
 import org.jspecify.annotations.Nullable;
 
-/** Added to SectionCompiler.Results and ModelBlockRenderer: the animated sprites a section compile meets. */
+/** Added to SectionCompiler.Results: the animated sprites a section compile meets. */
 public interface SpriteCollectorHolder {
 	@Nullable
 	SpriteSet vesuvio$sprites();

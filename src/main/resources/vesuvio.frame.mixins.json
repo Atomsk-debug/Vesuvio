@@ -13,13 +13,15 @@
 		"FrameItemFeatureRendererMixin",
 		"FrameLevelRendererMixin",
 		"FrameMinecraftMixin",
-		"FrameModelBlockRendererMixin",
 		"FrameMovingBlockFeatureRendererMixin",
+		"FrameMultiPartModelMixin",
 		"FrameSectionCompilerMixin",
 		"FrameSectionResultsMixin",
+		"FrameSingleVariantMixin",
 		"FrameSpriteContentsMixin",
 		"FrameTextureAtlasMixin",
-		"FrameVulkanInstanceMixin"
+		"FrameVulkanInstanceMixin",
+		"FrameWeightedVariantsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -18,7 +18,7 @@ Ideas only, no code copied:
   (`ui/VesuvioSettingsScreen.java`).
 - Adding a key mapping by appending it to `Options.keyMappings` before `Options.load`: the approach Fabric API's
   key binding registry uses (Apache 2.0), idea only, own code (`ui/mixin/OptionsKeyMixin.java`).
-- Vesuvio memory (`boost/src/main/java/it/cosimo/vesuvio/memory/`), own code following:
+- Vesuvio memory (`src/main/java/it/cosimo/vesuvio/memory/`), own code following:
   - FerriteCore by malte0811 (MIT, https://github.com/malte0811/FerriteCore): smaller PalettedContainer threading
     detector, block shape and block state cache deduplication, resource location deduplication.
   - ModernFix by embeddedt (LGPL, https://github.com/embeddedt/ModernFix): computing wall shapes once and sharing

@@ -19,7 +19,9 @@ import net.minecraft.world.level.block.state.BlockState;
  * are never seen: to reach them a ray has to pass several leaf textures first. Here a leaf face that touches another
  * leaf is dropped when the leaf is buried in that direction, i.e. the next blocks further along are leaves too (or
  * full opaque blocks); the outer layers, which are what you actually see, stay. Only the faces the model marks with a
- * cullface are affected (all of a vanilla leaf block's faces), and only during section compilation.
+ * cullface are affected (all of a vanilla leaf block's faces), and only during section compilation. The hook sits on
+ * {@code Block.shouldRenderFace}, which both vanilla's block renderer and Fabric API's Indigo renderer call, so it
+ * works with or without Fabric API.
  *
  * <p>Modes ({@link #MODE}): 0 off (vanilla), 1 smart (default: the neighbour and the two blocks after it must be
  * leaves/opaque, keeps three planes from every surface), 2 aggressive (neighbour and one more, like OptiFine's Smart
@@ -161,6 +163,58 @@ public final class LeafCulling {
 			}
 		}
 	}
+
+	/**
+	 * Section compile thread: the leaf block about to be tesselated. Whichever block renderer meshes it (vanilla's,
+	 * or Fabric API's Indigo, which replaces it in SectionCompiler but still asks {@code Block.shouldRenderFace}),
+	 * the face test then knows where the leaf is. Only leaf blocks are recorded.
+	 */
+	public static void beginBlock(BlockGetter region, BlockPos pos, BlockState state) {
+		if (active == OFF || !(state.getBlock() instanceof LeavesBlock)) {
+			return;
+		}
+		CompileContext ctx = CONTEXT.get();
+		ctx.level = region;
+		ctx.state = state;
+		ctx.pos.set(pos);
+	}
+
+	/** Section compile thread, end of a compile: forget the region. */
+	public static void endCompile() {
+		if (active == OFF) {
+			return;
+		}
+		CompileContext ctx = CONTEXT.get();
+		ctx.level = null;
+		ctx.state = null;
+	}
+
+	/**
+	 * {@code Block.shouldRenderFace} said "draw": true drops the face. Acts only inside a section compile, for the
+	 * leaf block recorded by {@link #beginBlock} (the only blocks that pass {@code state} here are the one being
+	 * tesselated, so the identity check ties the call to its position).
+	 */
+	public static boolean cullAtCompile(BlockState state, BlockState neighbor, Direction direction) {
+		if (active == OFF || !(state.getBlock() instanceof LeavesBlock) || !(neighbor.getBlock() instanceof LeavesBlock)) {
+			return false;
+		}
+		CompileContext ctx = CONTEXT.get();
+		if (ctx.state != state || ctx.level == null) {
+			return false;
+		}
+		ctx.neighbor.setWithOffset(ctx.pos, direction);
+		return cull(ctx.level, state, neighbor, ctx.neighbor, direction, ctx.probe);
+	}
+
+	private static final class CompileContext {
+		BlockGetter level;
+		BlockState state;
+		final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		final BlockPos.MutableBlockPos neighbor = new BlockPos.MutableBlockPos();
+		final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
+	}
+
+	private static final ThreadLocal<CompileContext> CONTEXT = ThreadLocal.withInitial(CompileContext::new);
 
 	private static final Direction[] DIRECTIONS = Direction.values();
 }

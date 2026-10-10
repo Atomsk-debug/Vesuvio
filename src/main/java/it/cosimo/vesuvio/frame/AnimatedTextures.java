@@ -15,7 +15,7 @@ import net.minecraft.client.resources.model.geometry.BakedQuad;
  *
  * <p>How "on screen" is known, conservatively:
  * <ul>
- * <li>terrain: each compiled section mesh lists the animated sprites its quads and fluids use (collected on the
+ * <li>terrain: each compiled section mesh lists the animated sprites its block models and fluids use (collected on the
  * compile worker), and the list is marked whenever vanilla (or Etna's shadow pass, which goes through the same
  * code) prepares that section for drawing;</li>
  * <li>baked quads drawn outside terrain (items anywhere, including the GUI; block models held or carried by entities;

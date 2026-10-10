@@ -8,9 +8,24 @@ public final class SpriteSet {
 	static final SpriteContents[] NONE = new SpriteContents[0];
 	private SpriteContents[] items = NONE;
 	private int size;
+	private boolean unknown;
+
+	/** Something in the section may draw sprites this set cannot list: the mesh will keep every sprite animating. */
+	public void markUnknown() {
+		unknown = true;
+	}
+
+	public void addAll(SpriteContents[] sprites) {
+		for (SpriteContents contents : sprites) {
+			addContents(contents);
+		}
+	}
 
 	public void add(TextureAtlasSprite sprite) {
-		SpriteContents contents = sprite.contents();
+		addContents(sprite.contents());
+	}
+
+	private void addContents(SpriteContents contents) {
 		if (!contents.isAnimated()) {
 			return;
 		}
@@ -27,7 +42,11 @@ public final class SpriteSet {
 		items[size++] = contents;
 	}
 
+	/** The sprites, or null when {@link #markUnknown() unknown}. */
 	public SpriteContents[] toArray() {
+		if (unknown) {
+			return null;
+		}
 		if (size == 0) {
 			return NONE;
 		}
