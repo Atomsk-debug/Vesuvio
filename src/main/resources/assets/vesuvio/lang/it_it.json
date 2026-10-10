@@ -1,0 +1,4 @@
+{
+	"vesuvio.option.leafCulling": "Culling delle foglie",
+	"vesuvio.option.leafCulling.tooltip": "Non disegna le facce delle foglie sepolte dentro una chioma, che non si vedono ma la GPU disegna lo stesso (anche nel passaggio delle ombre di Etna). Conta solo con le foglie cutout (dettagliate) attive. 0 = spento, come vanilla. 1 = intelligente (predefinito): toglie una faccia solo se i tre blocchi successivi in quella direzione sono foglie; sparisce circa metà delle facce di foglie di una foresta e solo circa 1 pixel su 50 della chioma mostra il cielo dove vanilla mostrava foglie. 2 = aggressivo: bastano due blocchi, come Smart Leaves di OptiFine; ne spariscono circa due terzi, le chiome sembrano un po' più rade (circa 1 pixel su 20). 3 = tutte: toglie ogni faccia tra due foglie; gli alberi sembrano vuoti dentro. Si applica subito (i chunk vengono ricostruiti), senza riavvio."
+}

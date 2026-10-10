@@ -1,1 +1,4 @@
-{}
+{
+	"vesuvio.option.leafCulling": "Leaf Culling",
+	"vesuvio.option.leafCulling.tooltip": "Skips the leaf faces buried inside a canopy, which you cannot see but the GPU still draws (also in Etna's shadow pass). Only matters with cutout (fancy) leaves on. 0 = off, same as vanilla. 1 = smart (default): drops a face only when the next three blocks that way are leaves; about half of a forest's leaf faces go, and only about 1 in 50 canopy pixels shows sky where vanilla showed leaves. 2 = aggressive: two blocks are enough, like OptiFine's Smart Leaves; about two thirds go, canopies look a bit thinner (about 1 in 20 pixels). 3 = all: every face between two leaves goes; trees look hollow. Applies at once (the world's chunks are rebuilt), no restart."
+}
