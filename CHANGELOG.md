@@ -1,6 +1,11 @@
 # Changelog
 
 ## 0.2.0 (in progress)
+- Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now
+  cleared by the render pass as it opens (LOAD_OP_CLEAR, same value, same pixels) instead of by a separate clear
+  that writes the whole image and has the pass read it back; the GUI's dead depth clears are dropped; post chain
+  targets no input reads as depth get no depth texture. Works for any mod's passes (Etna's post chains included).
+  Counters: clears fused, dropped, split.
 - Memory check (Memory page, F3): measures how much memory the game really needs and tells you whether the
   launcher's maximum memory setting is too low (stutter from constant cleanup), too high for your computer
   (the system and, on Apple silicon, the graphics run short and start swapping) or fine, with the number to set.

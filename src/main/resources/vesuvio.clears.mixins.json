@@ -1,0 +1,21 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.clears.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"ClearsFrontendEncoderMixin",
+		"ClearsFrontendRenderPassMixin",
+		"ClearsFrontendSurfaceMixin",
+		"ClearsGameRendererMixin",
+		"ClearsGuiRendererMixin",
+		"ClearsPostChainMixin",
+		"ClearsPostPassAccessor",
+		"ClearsVulkanEncoderAccessor",
+		"ClearsVulkanEncoderMixin",
+		"ClearsVulkanTextureMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
