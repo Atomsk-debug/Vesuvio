@@ -26,7 +26,7 @@
 	"vesuvio.option.statsLog": "Log counters",
 	"vesuvio.option.statsLog.tooltip": "Writes fps and Vesuvio's live counters (what each optimization skipped) to latest.log every 5 seconds, for checking or sharing. Costs nothing visible. No restart needed.",
 	"vesuvio.option.benchmarkSeconds": "Benchmark step (s)",
-	"vesuvio.option.benchmarkSeconds.tooltip": "How many seconds the benchmark measures each step, after 3 seconds to settle. Longer is steadier but the run takes longer.",
+	"vesuvio.option.benchmarkSeconds.tooltip": "How many seconds the benchmark measures each step, after at least 3 seconds to settle (more while the world's chunks are being rebuilt). Longer is steadier but the run takes longer.",
 	"vesuvio.toggle.on": "Vesuvio: on",
 	"vesuvio.toggle.off": "Vesuvio: off",
 	"key.category.vesuvio.main": "Vesuvio",

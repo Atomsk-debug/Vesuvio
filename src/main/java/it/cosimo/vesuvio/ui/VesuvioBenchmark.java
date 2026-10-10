@@ -11,6 +11,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
@@ -41,6 +42,12 @@ public final class VesuvioBenchmark {
 	}
 
 	private static final long SETTLE_NS = 3_000_000_000L;
+	/**
+	 * Settling goes on past {@link #SETTLE_NS} while chunk sections are still queued for compiling (a step that
+	 * changes how meshes are built, e.g. the master switch with leaf culling, rebuilds every loaded section), up
+	 * to this long.
+	 */
+	private static final long MAX_SETTLE_NS = 30_000_000_000L;
 	/** Camera travel (blocks) or turn (degrees) since the start above which the run stops. */
 	private static final double MOVE_LIMIT = 0.3;
 	private static final float TURN_LIMIT = 1.0F;
@@ -188,7 +195,8 @@ public final class VesuvioBenchmark {
 				return;
 			}
 			if (settling) {
-				if (now - phaseStart >= SETTLE_NS) {
+				long settled = now - phaseStart;
+				if (settled >= SETTLE_NS && (settled >= MAX_SETTLE_NS || compileQueue(mc) == 0)) {
 					settling = false;
 					phaseStart = now;
 					frameCount = 0;
@@ -246,6 +254,12 @@ public final class VesuvioBenchmark {
 		Component message = Component.translatable("vesuvio.benchmark.stopped", Component.translatable(reason.key()));
 		mc.gui.hud.setOverlayMessage(message, false);
 		mc.showDebugChat(message);
+	}
+
+	/** Sections waiting to be compiled (0 when unknown). */
+	private static int compileQueue(Minecraft mc) {
+		SectionRenderDispatcher dispatcher = mc.levelRenderer.sectionRenderDispatcher();
+		return dispatcher == null ? 0 : dispatcher.getCompileQueueSize();
 	}
 
 	private static @Nullable Stop interruption(Minecraft mc) {

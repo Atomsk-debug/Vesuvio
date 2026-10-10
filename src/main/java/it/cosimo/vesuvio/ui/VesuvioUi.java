@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 public final class VesuvioUi {
 	/** Writes the live counters ({@link VesuvioStats}) to latest.log every 5 s. */
 	public static final VesuvioConfig.Toggle STATS_LOG = VesuvioConfig.toggle("general", "statsLog", false, false);
-	/** How long each benchmark step measures, after 3 s to settle. */
+	/** How long each benchmark step measures, after at least 3 s to settle. */
 	public static final VesuvioConfig.Number BENCHMARK_SECONDS = VesuvioConfig.number("general", "benchmarkSeconds", 5, 60, 10,
 			false);
 

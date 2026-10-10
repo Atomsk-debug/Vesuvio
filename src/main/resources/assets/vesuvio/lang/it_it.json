@@ -26,7 +26,7 @@
 	"vesuvio.option.statsLog": "Registra contatori",
 	"vesuvio.option.statsLog.tooltip": "Scrive in latest.log ogni 5 secondi gli fps e i contatori di Vesuvio (cosa ha saltato ogni ottimizzazione), per controllarli o condividerli. Non cambia nulla a schermo. Non serve riavviare.",
 	"vesuvio.option.benchmarkSeconds": "Passo benchmark (s)",
-	"vesuvio.option.benchmarkSeconds.tooltip": "Quanti secondi il benchmark misura ogni passo, dopo 3 secondi di assestamento. Più lungo è più stabile, ma la prova dura di più.",
+	"vesuvio.option.benchmarkSeconds.tooltip": "Quanti secondi il benchmark misura ogni passo, dopo almeno 3 secondi di assestamento (di più mentre i chunk del mondo vengono ricostruiti). Più lungo è più stabile, ma la prova dura di più.",
 	"vesuvio.toggle.on": "Vesuvio: acceso",
 	"vesuvio.toggle.off": "Vesuvio: spento",
 	"key.category.vesuvio.main": "Vesuvio",
