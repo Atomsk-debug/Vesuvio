@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "vesuvio",
+	"version": "${version}",
+	"name": "Vesuvio",
+	"description": "Performance mod for Minecraft's native Vulkan renderer: culls what you can't see, does less work per frame, uses less memory. Works with or without Etna Shaders.",
+	"authors": [
+		"Cosimo"
+	],
+	"license": "MIT",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"it.cosimo.vesuvio.Vesuvio"
+		]
+	},
+	"mixins": [
+		"vesuvio.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": ">=26.4-",
+		"java": ">=25"
+	},
+	"breaks": {
+		"sodium": "*",
+		"vulkanmod": "*",
+		"nvidium": "*"
+	}
+}

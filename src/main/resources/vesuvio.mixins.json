@@ -1,0 +1,11 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
