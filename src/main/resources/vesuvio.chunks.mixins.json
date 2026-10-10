@@ -12,6 +12,7 @@
 		"ResortThrottleMixin",
 		"SectionCopyTrimMixin",
 		"StagedEntryAccessor",
+		"StagingBufferAccessor",
 		"UberBufferBudgetMixin",
 		"UploadBudgetMixin"
 	],

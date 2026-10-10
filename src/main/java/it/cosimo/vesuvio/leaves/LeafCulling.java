@@ -179,11 +179,11 @@ public final class LeafCulling {
 		ctx.pos.set(pos);
 	}
 
-	/** Section compile thread, end of a compile: forget the region. */
+	/**
+	 * Section compile thread, end of a compile: forget the region. Always, even with the mode now off: it may have been
+	 * switched off during this compile, after {@link #beginBlock} recorded a leaf.
+	 */
 	public static void endCompile() {
-		if (active == OFF) {
-			return;
-		}
 		CompileContext ctx = CONTEXT.get();
 		ctx.level = null;
 		ctx.state = null;

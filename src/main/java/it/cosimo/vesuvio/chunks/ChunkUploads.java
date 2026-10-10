@@ -1,7 +1,10 @@
 package it.cosimo.vesuvio.chunks;
 
+import com.mojang.blaze3d.vertex.StagingBuffer;
+
 import it.cosimo.vesuvio.VesuvioConfig;
 import it.cosimo.vesuvio.chunks.mixin.StagedEntryAccessor;
+import it.cosimo.vesuvio.chunks.mixin.StagingBufferAccessor;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -24,12 +27,18 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
  * half-built: it simply shows its old mesh a frame longer. If entries keep waiting, the budget grows each frame
  * (x2, x3, ...) and after {@link #FORCE_AFTER} frames everything is sent at once, as vanilla does, so nothing can
  * wait forever and the staging area is always emptied again.
+ *
+ * <p>The staging area is a bump allocator that starts over only after a frame that sent every staged buffer; while
+ * anything is held it keeps filling, and once full the workers spin on the dispatcher's lock until it is emptied.
+ * So a frame that finds it more than {@link #FLUSH_FILL} full sends everything (vanilla behaviour).
  */
 public final class ChunkUploads {
 	/** Frames in a row with entries left over after which one frame sends everything (vanilla behaviour). */
 	static final int FORCE_AFTER = 10;
 	/** Per-entry overhead (allocation, copy command, barrier, callback), counted as this many bytes. */
 	static final long ENTRY_COST_BYTES = 4096;
+	/** Share of the staging area in use above which the budget is ignored for the frame, so the area is reused. */
+	static final double FLUSH_FILL = 0.5;
 
 	/** True only during the end-of-frame upload called from LevelRenderer.render, while the budget applies. */
 	private static boolean active;
@@ -97,8 +106,16 @@ public final class ChunkUploads {
 	 * moves the staged entries that don't fit in the time left from {@code staged} to {@code held}, so vanilla's
 	 * code that follows uploads only the rest. Does nothing unless the budget applies to this call.
 	 */
-	public static void select(Object2ObjectOpenHashMap<Object, Object> staged, Object2ObjectOpenHashMap<Object, Object> held) {
+	public static void select(Object2ObjectOpenHashMap<Object, Object> staged, Object2ObjectOpenHashMap<Object, Object> held,
+			StagingBuffer staging) {
 		if (!active || staged.isEmpty()) {
+			return;
+		}
+		StagingBufferAccessor area = (StagingBufferAccessor) staging;
+		if (area.vesuvio$nextWriteOffset() > area.vesuvio$writeBuffer().capacity() * FLUSH_FILL) {
+			// Nearly full: send everything this frame (every call of the frame sees the same fill, nothing is
+			// staged while the dispatcher's lock is held), so the area starts over.
+			active = false;
 			return;
 		}
 		double left = (deadline - System.nanoTime()) / nsPerUnit;

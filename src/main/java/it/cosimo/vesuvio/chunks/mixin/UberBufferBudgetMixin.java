@@ -31,13 +31,17 @@ public abstract class UberBufferBudgetMixin {
 	@Final
 	private Object2ObjectOpenHashMap<Object, Object> stagedAllocations;
 
+	@Shadow
+	@Final
+	private StagingBuffer stagingBuffer;
+
 	@Unique
 	private final Object2ObjectOpenHashMap<Object, Object> vesuvio$held = new Object2ObjectOpenHashMap<>();
 
 	@Inject(method = "uploadStagedAllocations", at = @At("HEAD"))
 	private void vesuvio$selectWithinBudget(GpuDevice device, StagingBuffer.Uploader uploader,
 			CallbackInfoReturnable<Boolean> cir) {
-		ChunkUploads.select(stagedAllocations, vesuvio$held);
+		ChunkUploads.select(stagedAllocations, vesuvio$held, stagingBuffer);
 	}
 
 	@WrapOperation(method = "uploadStagedAllocations", at = @At(value = "INVOKE",
