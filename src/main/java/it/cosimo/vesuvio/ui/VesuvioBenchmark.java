@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import it.cosimo.vesuvio.VesuvioConfig;
 import it.cosimo.vesuvio.Vesuvio;
+import it.cosimo.vesuvio.draws.SubmitTimers;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -25,7 +26,9 @@ import org.jspecify.annotations.Nullable;
  *
  * Frame time is the real interval between the starts of two frames on the render thread
  * (Minecraft.runTick, see MinecraftUiMixin): it includes waiting for the GPU and for the swapchain, which
- * the game's own frame timer (getFrameTimeNs, the "cpu" column) leaves out.
+ * the game's own frame timer (getFrameTimeNs, the "cpu" column) leaves out. The "encode" and "wait" columns split the
+ * end of the frame (SubmitTimers): time inside vkQueueSubmit (on macOS, MoltenVK's Metal encoding) and time waiting
+ * for the GPU to finish an earlier frame, both in ms per frame.
  *
  * The settings are only changed in memory and never saved during a run; every switch is put back when it
  * ends, and when it is stopped: any key or mouse button pressed, the player moving or turning, a menu or
@@ -78,7 +81,8 @@ public final class VesuvioBenchmark {
 	}
 
 	/** One measured step. */
-	record Result(String name, int frames, double meanMs, double fps, double p95Ms, double cpuMs, int[] counters) {
+	record Result(String name, int frames, double meanMs, double fps, double p95Ms, double cpuMs, double encodeMs,
+			double waitMs, int[] counters) {
 	}
 
 	private static @Nullable List<Step> steps;
@@ -105,6 +109,10 @@ public final class VesuvioBenchmark {
 	private static int frameCount;
 	private static double frameSumNs;
 	private static double cpuSumNs;
+	/** SubmitTimers' totals when the step's measuring began. */
+	private static long encodeStartNs;
+	private static long waitStartNs;
+	private static long submitsStart;
 	/** When the action bar countdown was last refreshed. */
 	private static long lastCountdown;
 	/**
@@ -231,6 +239,9 @@ public final class VesuvioBenchmark {
 					frameCount = 0;
 					frameSumNs = 0.0;
 					cpuSumNs = 0.0;
+					encodeStartNs = SubmitTimers.encodeNsTotal;
+					waitStartNs = SubmitTimers.waitNsTotal;
+					submitsStart = SubmitTimers.submits;
 				}
 				return;
 			}
@@ -410,7 +421,10 @@ public final class VesuvioBenchmark {
 		for (int i = 0; i < counters.length; i++) {
 			counters[i] = stats.get(i).read();
 		}
-		return new Result(name, n, mean, mean > 0.0 ? 1000.0 / mean : 0.0, p95, cpu, counters);
+		long submitted = SubmitTimers.submits - submitsStart;
+		double encode = submitted <= 0 ? 0.0 : (SubmitTimers.encodeNsTotal - encodeStartNs) / (double) submitted / 1.0e6;
+		double wait = submitted <= 0 ? 0.0 : (SubmitTimers.waitNsTotal - waitStartNs) / (double) submitted / 1.0e6;
+		return new Result(name, n, mean, mean > 0.0 ? 1000.0 / mean : 0.0, p95, cpu, encode, wait, counters);
 	}
 
 	private static void finish(Minecraft mc) {
@@ -430,8 +444,8 @@ public final class VesuvioBenchmark {
 		double onMs = mean(done, s, Kind.ON);
 		double offMs = mean(done, s, Kind.OFF);
 		StringBuilder table = new StringBuilder();
-		table.append(String.format(Locale.ROOT, "%-3s%-28s%5s %6s %6s %7s | %6s%n", "#", "step", "fps", "frame", "p95", "vs on",
-				"cpu"));
+		table.append(String.format(Locale.ROOT, "%-3s%-28s%5s %6s %6s %7s | %6s %6s %6s%n", "#", "step", "fps", "frame", "p95",
+				"vs on", "cpu", "encode", "wait"));
 		for (int i = 0; i < done.length; i++) {
 			Result r = done[i];
 			if (r == null) {
@@ -439,8 +453,9 @@ public final class VesuvioBenchmark {
 			}
 			String vs = s.get(i).kind == Kind.ON ? "ref"
 					: onMs > 0 ? String.format(Locale.ROOT, "%+.2f", r.meanMs - onMs) : "?";
-			table.append(String.format(Locale.ROOT, "%-3d%-28s%5d %6.2f %6.2f %7s | %6.2f%s%n", i, clip(r.name, 27),
-					Math.round(r.fps), r.meanMs, r.p95Ms, vs, r.cpuMs, r.frames < 30 ? "  (few frames)" : ""));
+			table.append(String.format(Locale.ROOT, "%-3d%-28s%5d %6.2f %6.2f %7s | %6.2f %6.2f %6.2f%s%n", i, clip(r.name, 27),
+					Math.round(r.fps), r.meanMs, r.p95Ms, vs, r.cpuMs, r.encodeMs, r.waitMs,
+					r.frames < 30 ? "  (few frames)" : ""));
 		}
 		if (!stats.isEmpty()) {
 			table.append(String.format(Locale.ROOT, "%nCounters at the end of each step:%n%-3s%-28s", "#", "step"));
