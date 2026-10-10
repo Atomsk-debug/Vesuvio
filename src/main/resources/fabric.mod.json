@@ -21,7 +21,8 @@
 		"vesuvio.memory.mixins.json",
 		"vesuvio.faces.mixins.json",
 		"vesuvio.entities.mixins.json",
-		"vesuvio.frame.mixins.json"
+		"vesuvio.frame.mixins.json",
+		"vesuvio.ticks.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.19.5",

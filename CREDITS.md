@@ -38,3 +38,13 @@ Ideas only, no code copied:
   (juliand665 and LostLuma, MIT), own code, nothing ported.
 - MoltenVK settings through VK_EXT_layer_settings at instance creation (`frame/MoltenVkSettings.java`): the
   documented MoltenVK configuration parameters (Khronos MoltenVK, Apache 2.0), own code.
+- Entity section lookup by direct key instead of the sorted-set walk (`ticks/SectionLookup`): idea from Lithium
+  (CaffeineMC, LGPL-3.0) and Paper; own code, order-preserving.
+- Per-section lists of the few entity classes that can be collided with / are containers, for entity collisions
+  and hopper container lookups (`ticks/RareEntities`): idea from Lithium's entity class groups (LGPL-3.0); own code.
+- Remembering each block state's pathfinding type (`ticks/PathTypeMemo`): idea from Lithium's ai.pathing
+  (LGPL-3.0); own code (memo of the vanilla method, invalidated on tag rebinds).
+- POI sphere searches limited to the sub-chunks the sphere reaches (`ticks/mixin/PoiManagerMixin`): idea from
+  Lithium's ai.poi (LGPL-3.0); own code.
+- Suffocation check without streams (`ticks/mixin/EntitySuffocationMixin`): idea from Lithium's
+  entity.fast_suffocation_check (LGPL-3.0); own code.

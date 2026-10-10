@@ -3,6 +3,7 @@ package it.cosimo.vesuvio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import it.cosimo.vesuvio.ticks.WorldTicks;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -20,6 +21,7 @@ public final class Vesuvio implements ClientModInitializer {
 		it.cosimo.vesuvio.faces.FaceCulling.init();
 		it.cosimo.vesuvio.entities.Culling.init();
 		it.cosimo.vesuvio.frame.FrameBoost.init();
+		WorldTicks.init();
 		VesuvioConfig.save();
 		LOGGER.info("Vesuvio {} ready, {} settings, optimizations {}",
 				FabricLoader.getInstance().getModContainer("vesuvio").map(c -> c.getMetadata().getVersion()
