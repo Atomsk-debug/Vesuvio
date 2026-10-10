@@ -3,6 +3,7 @@ package it.cosimo.vesuvio.leaves;
 import java.util.concurrent.atomic.LongAdder;
 
 import it.cosimo.vesuvio.VesuvioConfig;
+import it.cosimo.vesuvio.ui.VesuvioStats;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -48,9 +49,11 @@ public final class LeafCulling {
 	private LeafCulling() {
 	}
 
-	/** Creates the setting (called from Vesuvio.onInitializeClient). */
+	/** Creates the setting and its counter (called from Vesuvio.onInitializeClient). */
 	public static void init() {
 		active = wanted();
+		// F3, the settings screen's box, the stats log and the benchmark's counter table.
+		VesuvioStats.register("leaf faces culled %", LeafCulling::culledPercent);
 	}
 
 	private static int wanted() {
