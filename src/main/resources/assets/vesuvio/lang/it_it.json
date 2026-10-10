@@ -1,0 +1,6 @@
+{
+	"vesuvio.option.faceCulling": "Culling delle facce",
+	"vesuvio.option.faceCulling.tooltip": "Salta le facce del terreno rivolte dalla parte opposta rispetto a te prima che la scheda grafica ci lavori (le scarterebbe comunque più tardi): circa metà del lavoro sui vertici del terreno in meno. L'immagine non cambia. Subito attivo: le sezioni costruite mentre era spento vengono ricostruite in sottofondo in pochi secondi.",
+	"vesuvio.option.faceCullingMinGap": "Culling delle facce: dividi da",
+	"vesuvio.option.faceCullingMinGap.tooltip": "Quante facce nascoste in mezzo a una sezione valgono una chiamata di disegno in più per saltarle. Più basso salta più facce ma aggiunge chiamate (tempo di CPU); più alto ne aggiunge meno. Le facce nascoste ai due capi di una sezione si saltano sempre gratis. Nessun cambio d'aspetto, subito attivo."
+}

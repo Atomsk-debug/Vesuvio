@@ -1,1 +1,6 @@
-{}
+{
+	"vesuvio.option.faceCulling": "Face Culling",
+	"vesuvio.option.faceCulling.tooltip": "Skips the faces of terrain that point away from you before the graphics card works on them (it would throw them away later anyway), saving about half the vertex work of the terrain. The picture does not change. Live: sections built while it was off are rebuilt in the background over a few seconds.",
+	"vesuvio.option.faceCullingMinGap": "Face Culling: Split From",
+	"vesuvio.option.faceCullingMinGap.tooltip": "How many hidden faces in the middle of a section are worth one extra draw call to skip. Lower skips more faces but adds draw calls (CPU time); higher keeps draws down. Hidden faces at either end of a section are always skipped for free. No look change, live."
+}
