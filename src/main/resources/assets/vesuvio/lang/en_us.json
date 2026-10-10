@@ -1,1 +1,8 @@
-{}
+{
+	"vesuvio.option.entityCulling": "Entity Culling",
+	"vesuvio.option.entityCulling.tooltip": "Skips drawing mobs, animals, item frames, dropped items and other entities hidden behind solid blocks (checked on a background thread). Looks the same, but an entity coming out from behind a wall can appear a frame late. Entities with a glowing outline, a visible name tag, a lead, or that you ride are always drawn. Works right away, no restart.",
+	"vesuvio.option.blockEntityCulling": "Block Entity Culling",
+	"vesuvio.option.blockEntityCulling.tooltip": "Skips drawing chests, signs, banners, shulker boxes, skulls and other block entities that are outside your view or hidden behind solid blocks. Beacon beams, end gateways and structure blocks are always drawn. Looks the same, but one coming into view from behind a wall can appear a frame late. Works right away, no restart.",
+	"vesuvio.option.particleCulling": "Particle Culling",
+	"vesuvio.option.particleCulling.tooltip": "Skips particles in places the game already knows you cannot see (the same check that hides caves and rooms behind walls). Particles outside your view are already skipped by the game. No change in look. Works right away, no restart."
+}

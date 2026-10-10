@@ -14,6 +14,7 @@ public final class Vesuvio implements ClientModInitializer {
 	public void onInitializeClient() {
 		// Touch each optimization so its settings exist before the settings screen or the first frame.
 		// (one line per optimization package)
+		it.cosimo.vesuvio.entities.Culling.init();
 		VesuvioConfig.save();
 		LOGGER.info("Vesuvio {} ready, {} settings, optimizations {}",
 				FabricLoader.getInstance().getModContainer("vesuvio").map(c -> c.getMetadata().getVersion()

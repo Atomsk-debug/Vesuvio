@@ -1,0 +1,17 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.entities.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"BlockEntityCullStateMixin",
+		"EntityCullStateMixin",
+		"EntityRendererInvoker",
+		"FrustumInvoker",
+		"LevelExtractorMixin",
+		"QuadParticleGroupMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
