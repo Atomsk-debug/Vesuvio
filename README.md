@@ -5,7 +5,7 @@ Vesuvio makes the game do less work for the same picture: it skips what you can'
 that hasn't changed, and uses less memory. It works on its own, or together with
 [Etna](https://github.com/Atomsk-debug/etna-shaders), the shaders from the same author.
 
-Built first for Apple Silicon Macs (MoltenVK), tested to work on Windows and Linux too.
+Made first for Apple Silicon Macs (MoltenVK), and meant to work on Windows and Linux as well.
 
 > **Status: in development.** The first version (0.1.0) is being built now. The list below is what it brings;
 > each part ships only once it is checked in game.
@@ -14,7 +14,7 @@ Built first for Apple Silicon Macs (MoltenVK), tested to work on Windows and Lin
 
 **Rendering**
 * Draws only the block faces that can face the camera (the trick that made Sodium fast), so the graphics
-  chip handles about half the terrain it used to.
+  chip skips the faces turned away from you before doing any work on them.
 * Hides the inner faces of leaves buried inside a canopy, keeping the outer layer and the gaps you can see
   through.
 * Skips mobs, chests, signs and particles hidden behind walls or outside your view.
