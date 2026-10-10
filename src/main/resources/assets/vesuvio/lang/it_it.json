@@ -1,0 +1,10 @@
+{
+	"vesuvio.option.memoryLightThreadChecks": "Blocchi chunk leggeri",
+	"vesuvio.option.memoryLightThreadChecks.tooltip": "I dati dei chunk usano un piccolo controllo interno invece di una serie di lock (circa 128 byte) in ogni sezione di chunk e in ogni copia fatta per costruirla o salvarla. Risparmia circa 10 MB a distanza di rendering 12 e 50 MB a 32, con meno spazzatura mentre i chunk caricano. Se una mod usa i dati dei chunk da due thread insieme, il gioco si ferma con lo stesso rapporto chiaro di prima. Nessun cambiamento visivo. Serve un riavvio.",
+	"vesuvio.option.memoryShareBlockShapes": "Condividi forme dei blocchi",
+	"vesuvio.option.memoryShareBlockShapes.tooltip": "I blocchi con forme identiche (muretti, staccionate, pannelli, sbarre, fuoco, redstone...) condividono un'unica forma invece di migliaia di copie, e muretti/staccionate/pannelli riusano le forme del primo blocco del loro tipo invece di ricalcolarle. Risparmia circa 10 MB e un po' di tempo all'avvio. Nessun cambiamento visivo o di gioco. Serve un riavvio.",
+	"vesuvio.option.memoryShareStateTables": "Condividi tabelle degli stati",
+	"vesuvio.option.memoryShareStateTables.tooltip": "Gli stati dei blocchi con le stesse tabelle di appoggio e di occlusione delle facce condividono un'unica tabella. Risparmia circa 1,5 MB. Nessun cambiamento visivo o di gioco. Serve un riavvio.",
+	"vesuvio.option.memoryShareIdNamespaces": "Condividi nomi degli id",
+	"vesuvio.option.memoryShareIdNamespaces.tooltip": "Gli id letti dai file del gioco e dalla rete (\"minecraft:stone\") condividono un unico testo \"minecraft\" invece di tenerne ognuno una copia. Risparmia circa 1 MB. Nessun cambiamento visivo o di gioco. Serve un riavvio."
+}

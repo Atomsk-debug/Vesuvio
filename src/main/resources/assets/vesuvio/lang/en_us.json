@@ -1,1 +1,10 @@
-{}
+{
+	"vesuvio.option.memoryLightThreadChecks": "Light Chunk Locks",
+	"vesuvio.option.memoryLightThreadChecks.tooltip": "Chunk data uses a tiny built-in check instead of a lock set (about 128 bytes) in every chunk section, and in every copy made to build or save one. Saves roughly 10 MB at render distance 12 and 50 MB at 32, with less garbage while chunks load. Still crashes with the same clear report if a mod misuses chunk data from two threads. No visual change. Needs a restart.",
+	"vesuvio.option.memoryShareBlockShapes": "Share Block Shapes",
+	"vesuvio.option.memoryShareBlockShapes.tooltip": "Blocks with identical shapes (walls, fences, panes, bars, fire, redstone...) share one shape object instead of thousands of copies, and walls/fences/panes reuse the shapes of the first block of their kind instead of computing them again. Saves roughly 10 MB and a little start-up time. No visual or gameplay change. Needs a restart.",
+	"vesuvio.option.memoryShareStateTables": "Share Block State Tables",
+	"vesuvio.option.memoryShareStateTables.tooltip": "Block states with the same face-support and face-occlusion tables share one table. Saves about 1.5 MB. No visual or gameplay change. Needs a restart.",
+	"vesuvio.option.memoryShareIdNamespaces": "Share Id Names",
+	"vesuvio.option.memoryShareIdNamespaces.tooltip": "Ids read from game files and the network (\"minecraft:stone\") share one \"minecraft\" text instead of each keeping a copy. Saves about 1 MB. No visual or gameplay change. Needs a restart."
+}
