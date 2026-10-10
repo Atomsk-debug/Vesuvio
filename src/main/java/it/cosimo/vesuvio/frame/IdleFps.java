@@ -41,9 +41,12 @@ public final class IdleFps {
 		// Touching the class creates the settings.
 	}
 
-	/** FramerateLimitTracker.getFramerateLimit: vanilla's limit, capped while unfocused. */
+	/**
+	 * FramerateLimitTracker.getFramerateLimit: vanilla's limit, capped while unfocused (not during the benchmark, which
+	 * may run with the window watched from another screen).
+	 */
 	public static int limit(int vanilla, Window window) {
-		boolean on = SETTING.on();
+		boolean on = SETTING.on() && !it.cosimo.vesuvio.ui.VesuvioBenchmark.running();
 		state = !on ? 0 : window.isIconified() ? 2 : window.isFocused() ? 0 : 1;
 		return state == 1 ? Math.min(vanilla, LIMIT.get()) : vanilla;
 	}
