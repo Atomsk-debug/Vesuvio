@@ -13,5 +13,6 @@ public final class FrameBoost {
 		AnimatedTextures.init();
 		IdleFps.init();
 		MoltenVkSettings.init();
+		PipelineDiskCache.init();
 	}
 }

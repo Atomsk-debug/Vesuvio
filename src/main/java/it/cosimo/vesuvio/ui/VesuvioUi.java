@@ -49,6 +49,7 @@ public final class VesuvioUi {
 	/** End of every client tick: the memory check and the stats log. */
 	public static void afterTick(Minecraft mc) {
 		it.cosimo.vesuvio.memory.MemoryAdvisor.tick(mc);
+		it.cosimo.vesuvio.frame.PipelineDiskCache.maybeSave();
 		if (!STATS_LOG.on()) {
 			return;
 		}

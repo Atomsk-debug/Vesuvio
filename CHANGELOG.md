@@ -5,6 +5,9 @@
   launcher's maximum memory setting is too low (stutter from constant cleanup), too high for your computer
   (the system and, on Apple silicon, the graphics run short and start swapping) or fine, with the number to set.
   A one-time chat message only when something is wrong.
+- Keep Compiled Shaders (Frame page, on): vanilla compiles every render pipeline without a Vulkan pipeline cache,
+  so the driver redoes all of it each launch. Vesuvio keeps one, saves it to `vesuvio-cache/` and reuses it:
+  faster start and no first-use shader hitches after the first launch, mostly on Windows.
 
 ## 0.1.2
 - Benchmark: a run stopped early (a key, a click, a move) now keeps the steps it already measured, in latest.log

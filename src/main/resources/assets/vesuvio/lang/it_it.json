@@ -92,6 +92,8 @@
 	"vesuvio.option.idleFpsLimit.tooltip": "FPS mentre la finestra è aperta ma non in primo piano (da 3 a 60). Il gioco continua a girare a piena velocità. Nessun riavvio.",
 	"vesuvio.option.fastStartupCompile": "Compilazione shader più rapida (Mac)",
 	"vesuvio.option.fastStartupCompile.tooltip": "Solo macOS: chiede a MoltenVK di far compilare a Metal gli shader su più thread insieme, così il breve scatto quando un effetto o un blocco compare per la prima volta dura meno. L'aspetto non cambia. Richiede il riavvio. Su Windows e Linux non fa nulla.",
+	"vesuvio.option.pipelineCache": "Conserva shader compilati",
+	"vesuvio.option.pipelineCache.tooltip": "Salva gli shader compilati dal driver grafico (cache delle pipeline Vulkan) nella cartella vesuvio-cache quando esci e li riusa al prossimo avvio: il gioco parte più in fretta e la prima volta che vedi un nuovo mob, effetto o passaggio di shader non scatta più. Il file viene verificato con scheda e driver e scartato dopo un aggiornamento del driver. Il guadagno è maggiore su Windows; su Mac Metal ha già una sua cache, quindi è minore. Nessun cambiamento visivo. Richiede il riavvio.",
 	"vesuvio.option.asyncSubmit": "Invio asincrono (Mac, sperimentale)",
 	"vesuvio.option.asyncSubmit.tooltip": "Solo macOS: MoltenVK converte ogni fotogramma in Metal su un thread suo invece che su quello del gioco. Può alzare gli FPS quando il limite è la CPU; non fa nulla quando il limite è la GPU. Sperimentale: disattivalo se vedi sfarfallii, scatti o crash. L'aspetto non cambia. Richiede il riavvio. Su Windows e Linux non fa nulla.",
 	"vesuvio.option.worldEntitySectionLookup": "Ricerca rapida delle entità",
