@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 (in progress)
+- Memory check (Memory page, F3): measures how much memory the game really needs and tells you whether the
+  launcher's maximum memory setting is too low (stutter from constant cleanup), too high for your computer
+  (the system and, on Apple silicon, the graphics run short and start swapping) or fine, with the number to set.
+  A one-time chat message only when something is wrong.
+
 ## 0.1.2
 - Benchmark: a run stopped early (a key, a click, a move) now keeps the steps it already measured, in latest.log
   and on the results screen, instead of throwing them away.

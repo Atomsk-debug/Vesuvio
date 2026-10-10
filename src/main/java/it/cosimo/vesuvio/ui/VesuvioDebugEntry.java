@@ -32,6 +32,7 @@ public final class VesuvioDebugEntry implements DebugScreenEntry {
 			state += " (benchmark: " + VesuvioBenchmark.stepName() + ")";
 		}
 		lines.add("Vesuvio " + state);
+		lines.add("Memory: " + it.cosimo.vesuvio.memory.MemoryAdvisor.status().getString());
 		if (VesuvioConfig.ENABLED.get()) {
 			// A few counters per line, so a long list stays on screen.
 			lines.addAll(VesuvioStats.lines(STATS_PER_LINE));

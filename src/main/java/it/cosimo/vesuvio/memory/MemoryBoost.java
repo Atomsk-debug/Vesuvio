@@ -47,6 +47,7 @@ public final class MemoryBoost {
 
 	/** Called from Vesuvio.onInitializeClient: makes the settings and drops the start-up lookup tables. */
 	public static void init() {
+		MemoryAdvisor.init();
 		// F3, the settings screen's box, the stats log and the benchmark's counter table (start-up sharing only).
 		it.cosimo.vesuvio.ui.VesuvioStats.register("block shapes shared", () -> shapesShared);
 		it.cosimo.vesuvio.ui.VesuvioStats.register("memory saved (KB)", () -> (int) (estimatedBytesSaved() / 1024));

@@ -32,6 +32,14 @@ effect the next time the game starts; all others apply live.
 
 ## Memory (all need a restart)
 
+The first row is the **memory check**, not a setting: after two minutes in a world it says whether the
+launcher's maximum memory (Prism: Edit instance > Settings > Java > Maximum memory allocation) is too low, too
+high for the computer, or fine, and which number to use. Too low makes the game clean up memory over and over
+(stutter); too high leaves the rest of the computer short, and on Apple silicon the graphics share that memory,
+so the system starts swapping (stutter too). In between, more memory does not make the game faster. The advice
+is twice the heap the game keeps after cleanups (highest 5-minute floor) plus 1 GB, at least 3 GB, and at most
+half the computer's memory on Apple silicon or all but 4 GB elsewhere. The same line is on F3.
+
 Turned off automatically when FerriteCore or ModernFix is installed, since they do the same.
 
 | Setting | Default | What it does |

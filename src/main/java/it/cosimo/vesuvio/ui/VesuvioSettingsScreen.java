@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import it.cosimo.vesuvio.VesuvioConfig;
+import it.cosimo.vesuvio.memory.MemoryAdvisor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -106,6 +107,9 @@ public final class VesuvioSettingsScreen extends Screen {
 		this.panelLeft = listLeft + listWidth + 8;
 		OptionList options = new OptionList(this.minecraft, listWidth, this.height - TOP - FOOTER, TOP);
 		options.updateSizeAndPosition(listWidth, this.height - TOP - FOOTER, listLeft, TOP);
+		if (this.page.equals("memory")) {
+			options.add(this.memoryRow());
+		}
 		for (VesuvioConfig.Setting s : all) {
 			if (s.page.equals(this.page)) {
 				options.add(this.row(s));
@@ -167,6 +171,22 @@ public final class VesuvioSettingsScreen extends Screen {
 		button.active = inWorld;
 		Row row = new Row(button, null, new Description(Component.translatable("vesuvio.benchmark.button"),
 				Component.translatable(inWorld ? "vesuvio.benchmark.tooltip" : "vesuvio.benchmark.noWorld"), null));
+		if (!this.panel) {
+			button.setTooltip(Tooltip.create(row.text()));
+		}
+		return row;
+	}
+
+	/** The memory check: its verdict on the button, the advice and the numbers in the box; a click says it in chat. */
+	private Row memoryRow() {
+		Button button = Button.builder(MemoryAdvisor.status(), b -> {
+			this.minecraft.gui.hud.getChat().addClientSystemMessage(
+					Component.translatable("vesuvio.memory.chat", MemoryAdvisor.advice()));
+			b.setMessage(MemoryAdvisor.status());
+		}).size(200, 20).build();
+		Row row = new Row(button, null, new Description(Component.translatable("vesuvio.memory.title").withStyle(ChatFormatting.BOLD),
+				Component.empty().append(MemoryAdvisor.advice()).append("\n\n").append(Component.translatable("vesuvio.memory.howTo")),
+				Component.literal(MemoryAdvisor.facts())));
 		if (!this.panel) {
 			button.setTooltip(Tooltip.create(row.text()));
 		}
@@ -332,6 +352,7 @@ public final class VesuvioSettingsScreen extends Screen {
 		void add(Row row) {
 			this.addEntry(row);
 		}
+
 
 		@Override
 		public int getRowWidth() {

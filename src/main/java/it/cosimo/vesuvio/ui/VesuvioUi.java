@@ -46,8 +46,9 @@ public final class VesuvioUi {
 		Vesuvio.LOGGER.info("Vesuvio switched {} with the key", on ? "on" : "off");
 	}
 
-	/** End of every client tick: the stats log. */
+	/** End of every client tick: the memory check and the stats log. */
 	public static void afterTick(Minecraft mc) {
+		it.cosimo.vesuvio.memory.MemoryAdvisor.tick(mc);
 		if (!STATS_LOG.on()) {
 			return;
 		}
