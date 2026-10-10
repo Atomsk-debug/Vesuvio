@@ -11,14 +11,17 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
 /**
  * The "Run benchmark" button on the General page. With the player standing still it measures, for
- * {@link VesuvioUi#BENCHMARK_SECONDS} each after 3 s to settle: Etna Vesuvio off, on, then each live
- * optimization switch flipped on its own (every toggle off the General page that needs no restart), on
- * again and off again. "Off" and "on" run at both ends, so how far the two land apart is the noise.
+ * {@link VesuvioUi#BENCHMARK_SECONDS} each after 3 s to settle: Vesuvio off, on, then each live
+ * optimization setting changed on its own (every setting off the General page that needs no restart: a
+ * toggle is flipped, a number goes to its lowest value, e.g. "leafCulling 0", or to its default if it is
+ * at its lowest already), on again and off again. "Off" and "on" run at both ends, so how far the two
+ * land apart is the noise.
  *
  * Frame time is the real interval between the starts of two frames on the render thread
  * (Minecraft.runTick, see MinecraftUiMixin): it includes waiting for the GPU and for the swapchain, which
@@ -39,14 +42,27 @@ public final class VesuvioBenchmark {
 	}
 
 	private static final long SETTLE_NS = 3_000_000_000L;
+	/**
+	 * Settling goes on past {@link #SETTLE_NS} while chunk sections are still queued for compiling (a step that
+	 * changes how meshes are built, e.g. the master switch with leaf culling, rebuilds every loaded section), up
+	 * to this long.
+	 */
+	private static final long MAX_SETTLE_NS = 30_000_000_000L;
 	/** Camera travel (blocks) or turn (degrees) since the start above which the run stops. */
 	private static final double MOVE_LIMIT = 0.3;
 	private static final float TURN_LIMIT = 1.0F;
 	/** Frame intervals kept per step for the 95th percentile; more frames than this are only averaged. */
 	private static final int MAX_FRAMES = 1 << 18;
 
-	/** One step: its name in the table, and the switches it sets (on top of the player's settings). */
-	private record Step(String name, Kind kind, VesuvioConfig.@Nullable Toggle flipped) {
+	/**
+	 * One step: its name in the table, and what it sets on top of the player's settings: the toggle it
+	 * flips, or the number setting it sets to {@code numberValue}.
+	 */
+	private record Step(String name, Kind kind, VesuvioConfig.@Nullable Toggle flipped,
+			VesuvioConfig.@Nullable Number number, int numberValue) {
+		Step(String name, Kind kind, VesuvioConfig.@Nullable Toggle flipped) {
+			this(name, kind, flipped, null, 0);
+		}
 	}
 
 	private enum Kind {
@@ -61,6 +77,9 @@ public final class VesuvioBenchmark {
 	private static List<VesuvioConfig.Toggle> toggles = List.of();
 	/** The player's own values of {@link #toggles}, put back at the end. */
 	private static boolean[] saved = new boolean[0];
+	private static List<VesuvioConfig.Number> numbers = List.of();
+	/** The player's own values of {@link #numbers}, put back at the end. */
+	private static int[] savedNumbers = new int[0];
 	private static Result[] results = new Result[0];
 	private static List<VesuvioStats.Stat> stats = List.of();
 	private static @Nullable ClientLevel level;
@@ -99,9 +118,12 @@ public final class VesuvioBenchmark {
 			return;
 		}
 		List<VesuvioConfig.Toggle> all = new ArrayList<>();
+		List<VesuvioConfig.Number> allNumbers = new ArrayList<>();
 		for (VesuvioConfig.Setting s : VesuvioConfig.all()) {
 			if (s instanceof VesuvioConfig.Toggle t) {
 				all.add(t);
+			} else if (s instanceof VesuvioConfig.Number n && !n.needsRestart && !"general".equals(n.page)) {
+				allNumbers.add(n);
 			}
 		}
 		toggles = List.copyOf(all);
@@ -109,12 +131,24 @@ public final class VesuvioBenchmark {
 		for (int i = 0; i < toggles.size(); i++) {
 			saved[i] = toggles.get(i).get();
 		}
+		numbers = List.copyOf(allNumbers);
+		savedNumbers = new int[numbers.size()];
+		for (int i = 0; i < numbers.size(); i++) {
+			savedNumbers[i] = numbers.get(i).get();
+		}
 		List<Step> list = new ArrayList<>();
 		list.add(new Step("Vesuvio off", Kind.OFF, null));
 		list.add(new Step("Vesuvio on", Kind.ON, null));
 		for (VesuvioConfig.Toggle t : toggles) {
 			if (t != VesuvioConfig.ENABLED && !t.needsRestart && !"general".equals(t.page)) {
 				list.add(new Step(t.key + (t.get() ? " off" : " on"), Kind.FLIP, t));
+			}
+		}
+		for (VesuvioConfig.Number n : numbers) {
+			// Lowest value (the optimization's "off" or mildest, e.g. leafCulling 0), or the default if already there.
+			int value = n.get() != n.min ? n.min : n.defaultValue;
+			if (value != n.get()) {
+				list.add(new Step(n.key + " " + value, Kind.FLIP, null, n, value));
 			}
 		}
 		list.add(new Step("Vesuvio on, again", Kind.ON, null));
@@ -161,7 +195,8 @@ public final class VesuvioBenchmark {
 				return;
 			}
 			if (settling) {
-				if (now - phaseStart >= SETTLE_NS) {
+				long settled = now - phaseStart;
+				if (settled >= SETTLE_NS && (settled >= MAX_SETTLE_NS || compileQueue(mc) == 0)) {
 					settling = false;
 					phaseStart = now;
 					frameCount = 0;
@@ -193,7 +228,7 @@ public final class VesuvioBenchmark {
 		}
 	}
 
-	/** Any key or mouse button pressed (KeyboardHandlerMixin, MouseHandlerMixin). */
+	/** Any key or mouse button pressed (InputUiMixin, MouseUiMixin). */
 	public static void input() {
 		if (steps != null) {
 			stop(Stop.INPUT);
@@ -219,6 +254,12 @@ public final class VesuvioBenchmark {
 		Component message = Component.translatable("vesuvio.benchmark.stopped", Component.translatable(reason.key()));
 		mc.gui.hud.setOverlayMessage(message, false);
 		mc.showDebugChat(message);
+	}
+
+	/** Sections waiting to be compiled (0 when unknown). */
+	private static int compileQueue(Minecraft mc) {
+		SectionRenderDispatcher dispatcher = mc.levelRenderer.sectionRenderDispatcher();
+		return dispatcher == null ? 0 : dispatcher.getCompileQueueSize();
 	}
 
 	private static @Nullable Stop interruption(Minecraft mc) {
@@ -254,23 +295,36 @@ public final class VesuvioBenchmark {
 				target[t] = !saved[t];
 			}
 		}
-		apply(target);
+		int[] numberTarget = savedNumbers.clone();
+		for (int n = 0; n < numbers.size(); n++) {
+			if (numbers.get(n) == s.number) {
+				numberTarget[n] = s.numberValue;
+			}
+		}
+		apply(target, numberTarget);
 		step = i;
 		settling = true;
 		phaseStart = now;
 	}
 
 	private static void restore() {
-		apply(saved);
+		apply(saved, savedNumbers);
 	}
 
-	/** Sets every toggle to target, telling listeners about each one that changed. Never saves. */
-	private static void apply(boolean[] target) {
+	/** Sets every toggle and number to its target, telling listeners about each one that changed. Never saves. */
+	private static void apply(boolean[] target, int[] numberTarget) {
 		for (int t = 0; t < toggles.size(); t++) {
 			VesuvioConfig.Toggle toggle = toggles.get(t);
 			if (toggle.get() != target[t]) {
 				toggle.set(target[t]);
 				VesuvioChanges.changed(toggle);
+			}
+		}
+		for (int n = 0; n < numbers.size(); n++) {
+			VesuvioConfig.Number number = numbers.get(n);
+			if (number.get() != numberTarget[n]) {
+				number.set(numberTarget[n]);
+				VesuvioChanges.changed(number);
 			}
 		}
 	}
@@ -355,7 +409,7 @@ public final class VesuvioBenchmark {
 	private static String setup(Minecraft mc) {
 		var o = mc.options;
 		return String.format(Locale.ROOT,
-				"Window %dx%d, render distance %d, fps limit %s, vsync %s, Etna Shaders %s, %d live switches.",
+				"Window %dx%d, render distance %d, fps limit %s, vsync %s, Etna Shaders %s, %d live settings.",
 				mc.getWindow().getWidth(), mc.getWindow().getHeight(), o.renderDistance().get(),
 				o.framerateLimit().get() >= 260 ? "none" : o.framerateLimit().get().toString(),
 				o.enableVsync().get() ? "on" : "off",
