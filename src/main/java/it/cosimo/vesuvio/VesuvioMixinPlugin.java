@@ -3,6 +3,7 @@ package it.cosimo.vesuvio;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.objectweb.asm.tree.ClassNode;
@@ -12,8 +13,42 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 /**
  * Lets a broken optimization be switched off without a new build: any mixin whose simple class name is in
  * "disabledMixins" in config/vesuvio.properties is not applied. Live on/off switches live in VesuvioConfig.
+ * A mixin that casts to an interface (or calls an accessor) another mixin adds goes with it: it would otherwise throw
+ * ClassCastException the first time it runs.
  */
 public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
+	/** Mixin -> the mixins whose interfaces it (or the code it calls) casts to. */
+	private static final Map<String, List<String>> NEEDS = Map.ofEntries(
+			// chunks
+			Map.entry("ResortThrottleMixin", List.of("RenderSectionStateMixin")),
+			Map.entry("ExtractSchedulingMixin", List.of("RenderSectionInvoker")),
+			Map.entry("UberBufferBudgetMixin", List.of("StagedEntryAccessor", "StagingBufferAccessor")),
+			// entities
+			Map.entry("LevelExtractorMixin", List.of("EntityCullStateMixin", "BlockEntityCullStateMixin",
+					"EntityRendererInvoker", "FrustumInvoker")),
+			// faces
+			Map.entry("SectionCompilerMixin", List.of("SectionCompilerResultsMixin")),
+			Map.entry("CompiledSectionMeshMixin", List.of("SectionCompilerResultsMixin")),
+			// frame
+			Map.entry("FrameSectionCompilerMixin", List.of("FrameSectionResultsMixin")),
+			Map.entry("FrameCompiledSectionMeshMixin", List.of("FrameSectionResultsMixin")),
+			Map.entry("FrameSpriteContentsMixin", List.of("FrameAnimationStateMixin")),
+			Map.entry("FrameAnimationStateMixin", List.of("FrameSpriteContentsMixin")),
+			Map.entry("FrameAtlasSpriteMixin", List.of("FrameSpriteContentsMixin")),
+			Map.entry("FrameBlockModelFeatureRendererMixin", List.of("FrameSpriteContentsMixin")),
+			Map.entry("FrameItemFeatureRendererMixin", List.of("FrameSpriteContentsMixin")),
+			Map.entry("FrameMovingBlockFeatureRendererMixin", List.of("FrameSpriteContentsMixin")),
+			Map.entry("FrameLevelRendererMixin", List.of("FrameSpriteContentsMixin")),
+			// ticks
+			Map.entry("LevelMixin", List.of("EntitySectionMixin", "LevelEntityGetterAdapterAccessor")),
+			Map.entry("HopperBlockEntityMixin", List.of("LevelMixin", "EntitySectionMixin")),
+			Map.entry("WalkNodeEvaluatorMixin", List.of("BlockStatePathTypeMixin")),
+			Map.entry("PoiManagerMixin", List.of("SectionStorageAccess")),
+			// memory
+			Map.entry("BlockShapeTableMixin", List.of("VoxelShapeAccessor", "BitSetDiscreteVoxelShapeAccessor")),
+			Map.entry("StateCacheShapeMixin", List.of("VoxelShapeAccessor", "BitSetDiscreteVoxelShapeAccessor")),
+			Map.entry("BlockStateOcclusionShapeMixin", List.of("VoxelShapeAccessor", "BitSetDiscreteVoxelShapeAccessor")));
+
 	private final Set<String> disabled = new HashSet<>();
 
 	@Override
@@ -21,6 +56,16 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 		for (String name : Arrays.asList(VesuvioConfig.raw("disabledMixins", "").split(","))) {
 			if (!name.isBlank()) {
 				disabled.add(name.trim());
+			}
+		}
+		boolean changed = !disabled.isEmpty();
+		while (changed) {
+			changed = false;
+			for (Map.Entry<String, List<String>> entry : NEEDS.entrySet()) {
+				if (!disabled.contains(entry.getKey()) && entry.getValue().stream().anyMatch(disabled::contains)) {
+					disabled.add(entry.getKey());
+					changed = true;
+				}
 			}
 		}
 	}
@@ -34,7 +79,8 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
 		String simple = mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1);
 		if (disabled.contains(simple)) {
-			Vesuvio.LOGGER.warn("Vesuvio: {} switched off in vesuvio.properties (disabledMixins)", simple);
+			Vesuvio.LOGGER.warn("Vesuvio: {} switched off in vesuvio.properties (disabledMixins, or a mixin it needs is)",
+					simple);
 			return false;
 		}
 		return true;
