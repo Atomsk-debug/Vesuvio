@@ -29,7 +29,10 @@ import org.jspecify.annotations.Nullable;
  *
  * The settings are only changed in memory and never saved during a run; every switch is put back when it
  * ends, and when it is stopped: any key or mouse button pressed, the player moving or turning, a menu or
- * loading screen opening, the window minimized, the world left, or an error.
+ * loading screen opening, the window minimized, the world left, or an error. A stopped run still logs the
+ * steps it finished, and shows them when it was stopped by a key or a move. While it runs, the action bar
+ * shows the step and the time left. Movement in the first moments is ignored, while the player may still be
+ * coasting from closing the menu.
  */
 public final class VesuvioBenchmark {
 	/** Why a run ended. */
@@ -51,6 +54,11 @@ public final class VesuvioBenchmark {
 	/** Camera travel (blocks) or turn (degrees) since the start above which the run stops. */
 	private static final double MOVE_LIMIT = 0.3;
 	private static final float TURN_LIMIT = 1.0F;
+	/**
+	 * At the start of the first step the player may still be coasting from the moment the menu closed: for this
+	 * long the starting position follows the camera instead of stopping the run.
+	 */
+	private static final long COAST_NS = 1_500_000_000L;
 	/** Frame intervals kept per step for the 95th percentile; more frames than this are only averaged. */
 	private static final int MAX_FRAMES = 1 << 18;
 
@@ -97,6 +105,13 @@ public final class VesuvioBenchmark {
 	private static int frameCount;
 	private static double frameSumNs;
 	private static double cpuSumNs;
+	/** When the action bar countdown was last refreshed. */
+	private static long lastCountdown;
+	/**
+	 * Results of a run stopped by a key or a click, shown on the next frame so that the key or click itself does
+	 * not reach (and close) the results screen.
+	 */
+	private static @Nullable VesuvioBenchmarkScreen pendingScreen;
 
 	private VesuvioBenchmark() {
 	}
@@ -166,6 +181,8 @@ public final class VesuvioBenchmark {
 		startXRot = p.getXRot();
 		step = -1;
 		lastFrame = 0L;
+		lastCountdown = 0L;
+		pendingScreen = null;
 		steps = list;
 		long seconds = list.size() * (SETTLE_NS / 1_000_000_000L + measureNs / 1_000_000_000L);
 		Vesuvio.LOGGER.info("Vesuvio benchmark started: {} steps, {} s each after {} s to settle, about {} s. {}",
@@ -176,6 +193,14 @@ public final class VesuvioBenchmark {
 	/** Start of every frame (Minecraft.runTick), render thread. Cheap when no run is going. */
 	public static void frame() {
 		if (steps == null) {
+			if (pendingScreen != null) {
+				VesuvioBenchmarkScreen screen = pendingScreen;
+				pendingScreen = null;
+				Minecraft mc = Minecraft.getInstance();
+				if (mc.level != null) {
+					mc.gui.setScreen(screen);
+				}
+			}
 			return;
 		}
 		try {
@@ -193,6 +218,10 @@ public final class VesuvioBenchmark {
 			if (step < 0) {
 				begin(0, now);
 				return;
+			}
+			if (now - lastCountdown >= 1_000_000_000L) {
+				lastCountdown = now;
+				countdown(mc, now);
 			}
 			if (settling) {
 				long settled = now - phaseStart;
@@ -241,6 +270,10 @@ public final class VesuvioBenchmark {
 			return;
 		}
 		String at = stepName();
+		List<Step> s = steps;
+		Result[] done = results.clone();
+		Minecraft mc = Minecraft.getInstance();
+		String setupText = reason == Stop.DONE ? "" : setup(mc);
 		restore();
 		steps = null;
 		frames = null;
@@ -250,10 +283,35 @@ public final class VesuvioBenchmark {
 		}
 		Vesuvio.LOGGER.info("Vesuvio benchmark stopped at step {} ({}); settings put back", at,
 				reason.name().toLowerCase(Locale.ROOT));
-		Minecraft mc = Minecraft.getInstance();
 		Component message = Component.translatable("vesuvio.benchmark.stopped", Component.translatable(reason.key()));
 		mc.gui.hud.setOverlayMessage(message, false);
 		mc.showDebugChat(message);
+		int measured = 0;
+		for (Result r : done) {
+			if (r != null) {
+				measured++;
+			}
+		}
+		if (measured > 0) {
+			try {
+				// Only a key or a move leaves the game where the player can read a results screen.
+				boolean show = reason == Stop.INPUT || reason == Stop.MOVED;
+				report(mc, done, s, setupText, Component.translatable("vesuvio.benchmark.partial", measured, s.size()), show);
+			} catch (RuntimeException e) {
+				Vesuvio.LOGGER.error("Vesuvio: could not report the benchmark's partial results", e);
+			}
+		}
+	}
+
+	/** The action bar line: step, time left, and a reminder not to touch anything. */
+	private static void countdown(Minecraft mc, long now) {
+		long perStep = SETTLE_NS + measureNs;
+		long elapsed = now - phaseStart;
+		long left = settling ? Math.max(0L, SETTLE_NS - elapsed) + measureNs : Math.max(0L, measureNs - elapsed);
+		left += (steps.size() - step - 1) * perStep;
+		long seconds = (left + 999_999_999L) / 1_000_000_000L;
+		mc.gui.hud.setOverlayMessage(Component.translatable("vesuvio.benchmark.progress", step + 1, steps.size(),
+				String.format(Locale.ROOT, "%d:%02d", seconds / 60, seconds % 60)), false);
 	}
 
 	/** Sections waiting to be compiled (0 when unknown). */
@@ -272,6 +330,14 @@ public final class VesuvioBenchmark {
 		}
 		if (mc.getWindow().isIconified()) {
 			return Stop.MINIMIZED;
+		}
+		if (step <= 0 && (step < 0 || settling && System.nanoTime() - phaseStart < COAST_NS)) {
+			startX = p.getX();
+			startY = p.getY();
+			startZ = p.getZ();
+			startYRot = p.getYRot();
+			startXRot = p.getXRot();
+			return null;
 		}
 		double dx = p.getX() - startX;
 		double dy = p.getY() - startY;
@@ -352,6 +418,15 @@ public final class VesuvioBenchmark {
 		List<Step> s = steps;
 		String setupText = setup(mc);
 		stop(Stop.DONE);
+		report(mc, done, s, setupText, null, true);
+	}
+
+	/**
+	 * Logs the table of the measured steps and shows it on the results screen. {@code partial} is null for a
+	 * finished run, else the line saying how many steps a stopped run measured (its other entries are null).
+	 */
+	private static void report(Minecraft mc, Result[] done, List<Step> s, String setupText, @Nullable Component partial,
+			boolean show) {
 		double onMs = mean(done, s, Kind.ON);
 		double offMs = mean(done, s, Kind.OFF);
 		StringBuilder table = new StringBuilder();
@@ -359,7 +434,11 @@ public final class VesuvioBenchmark {
 				"cpu"));
 		for (int i = 0; i < done.length; i++) {
 			Result r = done[i];
-			String vs = s.get(i).kind == Kind.ON ? "ref" : String.format(Locale.ROOT, "%+.2f", r.meanMs - onMs);
+			if (r == null) {
+				continue;
+			}
+			String vs = s.get(i).kind == Kind.ON ? "ref"
+					: onMs > 0 ? String.format(Locale.ROOT, "%+.2f", r.meanMs - onMs) : "?";
 			table.append(String.format(Locale.ROOT, "%-3d%-28s%5d %6.2f %6.2f %7s | %6.2f%s%n", i, clip(r.name, 27),
 					Math.round(r.fps), r.meanMs, r.p95Ms, vs, r.cpuMs, r.frames < 30 ? "  (few frames)" : ""));
 		}
@@ -370,6 +449,9 @@ public final class VesuvioBenchmark {
 			}
 			table.append(System.lineSeparator());
 			for (int i = 0; i < done.length; i++) {
+				if (done[i] == null) {
+					continue;
+				}
 				table.append(String.format(Locale.ROOT, "%-3d%-28s", i, clip(done[i].name, 27)));
 				for (int c : done[i].counters) {
 					table.append(String.format(Locale.ROOT, " %12d", c));
@@ -379,17 +461,34 @@ public final class VesuvioBenchmark {
 		}
 		double offFps = offMs > 0 ? 1000.0 / offMs : 0.0;
 		double onFps = onMs > 0 ? 1000.0 / onMs : 0.0;
-		Vesuvio.LOGGER.info("Vesuvio benchmark done: off {} fps ({} ms), on {} fps ({} ms). {}{}{}",
-				Math.round(offFps), fmt(offMs), Math.round(onFps), fmt(onMs), setupText, System.lineSeparator(), table);
-		mc.showDebugChat(Component.translatable("vesuvio.benchmark.done", Math.round(offFps), Math.round(onFps),
-				String.format(Locale.ROOT, "%+.0f", offFps > 0 ? (onFps / offFps - 1.0) * 100.0 : 0.0)));
+		Vesuvio.LOGGER.info("Vesuvio benchmark {}: off {} fps ({} ms), on {} fps ({} ms). {}{}{}",
+				partial == null ? "done" : "partial results (" + partial.getString() + ")", Math.round(offFps), fmt(offMs),
+				Math.round(onFps), fmt(onMs), setupText, System.lineSeparator(), table);
+		if (partial == null) {
+			mc.showDebugChat(Component.translatable("vesuvio.benchmark.done", Math.round(offFps), Math.round(onFps),
+					String.format(Locale.ROOT, "%+.0f", offFps > 0 ? (onFps / offFps - 1.0) * 100.0 : 0.0)));
+		} else {
+			mc.showDebugChat(partial);
+		}
+		if (!show) {
+			return;
+		}
 		List<VesuvioBenchmarkScreen.Row> rows = new ArrayList<>();
 		for (int i = 0; i < done.length; i++) {
 			Result r = done[i];
-			boolean ref = s.get(i).kind == Kind.ON;
-			rows.add(new VesuvioBenchmarkScreen.Row(r.name, Math.round(r.fps), r.meanMs, r.p95Ms, ref ? Double.NaN : r.meanMs - onMs));
+			if (r == null) {
+				continue;
+			}
+			boolean ref = s.get(i).kind == Kind.ON || onMs <= 0;
+			rows.add(new VesuvioBenchmarkScreen.Row(i, r.name, Math.round(r.fps), r.meanMs, r.p95Ms,
+					ref ? Double.NaN : r.meanMs - onMs, s.get(i).kind == Kind.ON));
 		}
-		mc.gui.setScreen(new VesuvioBenchmarkScreen(rows, onFps, offFps));
+		VesuvioBenchmarkScreen screen = new VesuvioBenchmarkScreen(rows, onFps, offFps, partial);
+		if (partial == null) {
+			mc.gui.setScreen(screen);
+		} else {
+			pendingScreen = screen;
+		}
 	}
 
 	/** Mean frame time of the steps of a kind (the two "on" or the two "off" steps). */

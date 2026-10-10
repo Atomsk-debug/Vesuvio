@@ -35,6 +35,8 @@
 	"vesuvio.benchmark.tooltip": "Measures fps with Vesuvio off, on, and with each optimization changed in turn (each setting on the other pages that needs no restart: a switch is flipped, a number such as Leaf Culling goes to 0), then on and off again. Stand still somewhere typical and don't touch anything: any key, click, move or menu stops it and puts your settings back. The results show at the end and go to latest.log.",
 	"vesuvio.benchmark.noWorld": "Join a world first: the benchmark measures the game as you play it.",
 	"vesuvio.benchmark.started": "Vesuvio benchmark: %s steps, about %s s. Stand still and don't touch anything; any key stops it.",
+	"vesuvio.benchmark.progress": "Vesuvio benchmark %s/%s, %s left. Don't touch anything.",
+	"vesuvio.benchmark.partial": "Stopped early: %s of %s steps measured, shown here and in latest.log.",
 	"vesuvio.benchmark.stopped": "Vesuvio benchmark stopped (%s); settings put back.",
 	"vesuvio.benchmark.stop.done": "finished",
 	"vesuvio.benchmark.stop.input": "a key or button was pressed",

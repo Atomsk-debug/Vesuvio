@@ -1,9 +1,29 @@
 # Benchmarking Vesuvio
 
-Vesuvio has its own benchmark (Options > Video Settings > Vesuvio > General > Benchmark). It is being built
-for 0.1.0; this page describes it once it ships.
+Vesuvio has its own benchmark: Options > Video Settings > Vesuvio > General > **Run benchmark**.
 
-Tips for a fair run, whatever tool you use:
-* Stand still in the same spot, looking the same way, with all chunks loaded.
+## Running it
+1. Join a world, stand somewhere typical with all chunks loaded, and look the way you usually play.
+2. Press **Run benchmark**. The menu closes and the run starts.
+3. Don't touch anything until the results screen opens. The action bar shows the step and the time left (about
+   5 minutes with the default 10 s steps).
+
+Any key, click, move or turn, a menu opening, minimizing the window or leaving the world stops the run and puts
+your settings back. Steps already measured are kept: they go to `logs/latest.log` and, after a key, click or
+move, show on the results screen.
+
+## What it measures
+Each step settles for at least 3 seconds (longer while chunks are being rebuilt), then measures for
+`benchmarkSeconds` (10 by default). The steps are: Vesuvio off, Vesuvio on, then every live setting outside the
+General page changed on its own (a switch flipped, a number set to its lowest value), then on and off again. How
+far the two "on" (or "off") steps land apart is the noise; differences smaller than that mean nothing.
+
+The results table in `latest.log` has, per step: fps, mean frame time, 95th percentile frame time, the difference
+from "on" in ms (a positive number means what that step switched off was saving time) and the game's own CPU
+frame time. The settings are never saved during a run.
+
+## Tips for a fair run
 * Use the same window mode each time (exclusive fullscreen is faster on macOS than a normal fullscreen window).
 * Turn VSync off and set the frame limit to unlimited, or the numbers stop at your screen's refresh rate.
+* Compare runs only with the same spot, render distance, shaders and window size; the first log line of each run
+  records them.

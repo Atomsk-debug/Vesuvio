@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+- Benchmark: a run stopped early (a key, a click, a move) now keeps the steps it already measured, in latest.log
+  and on the results screen, instead of throwing them away.
+- Benchmark: the action bar shows the step and the time left while it runs.
+- Benchmark: the player still drifting just after the menu closes no longer stops the run at once.
+
 ## 0.1.1
 - Fixed a crash when entering a world with saved chunks ("Exception loading chunk", from the Light Chunk Locks
   memory setting).

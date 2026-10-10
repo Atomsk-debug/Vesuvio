@@ -35,6 +35,8 @@
 	"vesuvio.benchmark.tooltip": "Misura gli fps con Vesuvio spento, acceso e con ogni ottimizzazione cambiata a turno (ogni impostazione delle altre pagine che non richiede riavvio: un interruttore viene invertito, un numero come Culling delle foglie va a 0), poi di nuovo acceso e spento. Resta fermo in un punto tipico e non toccare nulla: qualsiasi tasto, clic, movimento o menu lo ferma e rimette le tue impostazioni. I risultati appaiono alla fine e vanno in latest.log.",
 	"vesuvio.benchmark.noWorld": "Entra prima in un mondo: il benchmark misura il gioco mentre giochi.",
 	"vesuvio.benchmark.started": "Benchmark Vesuvio: %s passi, circa %s s. Resta fermo e non toccare nulla; qualsiasi tasto lo ferma.",
+	"vesuvio.benchmark.progress": "Benchmark Vesuvio %s/%s, mancano %s. Non toccare nulla.",
+	"vesuvio.benchmark.partial": "Fermato prima della fine: misurati %s passi su %s, qui e in latest.log.",
 	"vesuvio.benchmark.stopped": "Benchmark Vesuvio fermato (%s); impostazioni ripristinate.",
 	"vesuvio.benchmark.stop.done": "finito",
 	"vesuvio.benchmark.stop.input": "è stato premuto un tasto o un pulsante",
