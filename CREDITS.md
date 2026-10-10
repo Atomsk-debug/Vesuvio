@@ -27,3 +27,8 @@ Ideas only, no code copied:
 - Per-direction face culling of terrain sections (`it.cosimo.vesuvio.faces`): sorting each section's quads by
   the way they face when it is built, and drawing only the facings that can face the camera. Idea from Sodium
   (PolyForm Shield); no Sodium code was read or copied.
+- Entity / block entity occlusion culling (`entities/OcclusionTest`, `entities/CullWorker`): visibility by casting
+  rays from the camera through the block grid to sample points on the faces of the box that face the camera, on a
+  background thread, results applied a frame later; idea from LogisticsCraft's OcclusionCulling
+  (https://github.com/LogisticsCraft/OcclusionCulling, MIT, Copyright (c) tr7zw / LogisticsCraft) as used by
+  EntityCulling. Independent implementation, no code copied from either.

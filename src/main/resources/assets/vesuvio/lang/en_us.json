@@ -64,5 +64,11 @@
 	"vesuvio.option.faceCulling": "Face Culling",
 	"vesuvio.option.faceCulling.tooltip": "Skips the faces of terrain that point away from you before the graphics card works on them (it would throw them away later anyway), saving about half the vertex work of the terrain. The picture does not change. Live: sections built while it was off are rebuilt in the background over a few seconds.",
 	"vesuvio.option.faceCullingMinGap": "Face Culling: Split From",
-	"vesuvio.option.faceCullingMinGap.tooltip": "How many hidden faces in the middle of a section are worth one extra draw call to skip. Lower skips more faces but adds draw calls (CPU time); higher keeps draws down. Hidden faces at either end of a section are always skipped for free. No look change, live."
+	"vesuvio.option.faceCullingMinGap.tooltip": "How many hidden faces in the middle of a section are worth one extra draw call to skip. Lower skips more faces but adds draw calls (CPU time); higher keeps draws down. Hidden faces at either end of a section are always skipped for free. No look change, live.",
+	"vesuvio.option.entityCulling": "Entity Culling",
+	"vesuvio.option.entityCulling.tooltip": "Skips drawing mobs, animals, item frames, dropped items and other entities hidden behind solid blocks (checked on a background thread). Looks the same, but an entity coming out from behind a wall can appear a frame late. Entities with a glowing outline, a visible name tag, a lead, or that you ride are always drawn. Works right away, no restart.",
+	"vesuvio.option.blockEntityCulling": "Block Entity Culling",
+	"vesuvio.option.blockEntityCulling.tooltip": "Skips drawing chests, signs, banners, shulker boxes, skulls and other block entities that are outside your view or hidden behind solid blocks. Beacon beams, end gateways and structure blocks are always drawn. Looks the same, but one coming into view from behind a wall can appear a frame late. Works right away, no restart.",
+	"vesuvio.option.particleCulling": "Particle Culling",
+	"vesuvio.option.particleCulling.tooltip": "Skips particles in places the game already knows you cannot see (the same check that hides caves and rooms behind walls). Particles outside your view are already skipped by the game. No change in look. Works right away, no restart."
 }

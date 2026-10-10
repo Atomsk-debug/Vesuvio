@@ -19,7 +19,8 @@
 		"vesuvio.leaves.mixins.json",
 		"vesuvio.ui.mixins.json",
 		"vesuvio.memory.mixins.json",
-		"vesuvio.faces.mixins.json"
+		"vesuvio.faces.mixins.json",
+		"vesuvio.entities.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.19.5",
