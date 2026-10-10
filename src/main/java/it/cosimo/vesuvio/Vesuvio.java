@@ -16,6 +16,7 @@ public final class Vesuvio implements ClientModInitializer {
 		// (one line per optimization package)
 		it.cosimo.vesuvio.leaves.LeafCulling.init();
 		it.cosimo.vesuvio.ui.VesuvioUi.init();
+		it.cosimo.vesuvio.memory.MemoryBoost.init();
 		VesuvioConfig.save();
 		LOGGER.info("Vesuvio {} ready, {} settings, optimizations {}",
 				FabricLoader.getInstance().getModContainer("vesuvio").map(c -> c.getMetadata().getVersion()

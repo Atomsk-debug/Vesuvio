@@ -1,0 +1,22 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.memory.mixin",
+	"plugin": "it.cosimo.vesuvio.memory.MemoryMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"BitSetDiscreteVoxelShapeAccessor",
+		"BlockShapeTableMixin",
+		"BlockStateFaceTableMixin",
+		"BlockStateOcclusionShapeMixin",
+		"CrossCollisionBlockMixin",
+		"IdentifierMixin",
+		"PalettedContainerMixin",
+		"StateCacheShapeMixin",
+		"StateCacheSupportMixin",
+		"VoxelShapeAccessor",
+		"WallBlockMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
