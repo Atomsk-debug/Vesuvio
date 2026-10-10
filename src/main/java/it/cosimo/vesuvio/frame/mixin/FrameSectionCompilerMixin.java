@@ -24,7 +24,9 @@ import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.chunk.SectionCompiler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 
 /**
  * While a section compiles (worker thread), collect the animated sprites its block models and fluids use. The set
@@ -62,6 +64,10 @@ public abstract class FrameSectionCompilerMixin {
 		return model;
 	}
 
+	/**
+	 * Every fluid: its model's sprites. Only water and lava have vanilla fluid models; any other fluid (from a mod) is
+	 * drawn with sprites this cannot know (Fabric API's fluid render handlers), so its section is "unknown".
+	 */
 	@WrapOperation(method = "compile", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/client/renderer/block/FluidRenderer;tesselate(Lnet/minecraft/client/renderer/block/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/client/renderer/block/FluidRenderer$Output;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/material/FluidState;)V"))
 	private void vesuvio$collectFluidSprites(FluidRenderer fluidRenderer, BlockAndTintGetter level, BlockPos pos,
@@ -70,6 +76,11 @@ public abstract class FrameSectionCompilerMixin {
 		original.call(fluidRenderer, level, pos, output, blockState, fluidState);
 		SpriteSet sprites = ((SpriteCollectorHolder) (Object) results).vesuvio$sprites();
 		if (sprites != null) {
+			Fluid type = fluidState.getType();
+			if (type != Fluids.WATER && type != Fluids.FLOWING_WATER && type != Fluids.LAVA && type != Fluids.FLOWING_LAVA) {
+				sprites.markUnknown();
+				return;
+			}
 			FluidModel model = this.fluidModelSet.get(fluidState);
 			sprites.add(model.stillMaterial().sprite());
 			sprites.add(model.flowingMaterial().sprite());
