@@ -1,1 +1,12 @@
-{}
+{
+	"vesuvio.option.animatedTextures": "Animate Only Visible Textures",
+	"vesuvio.option.animatedTextures.tooltip": "Animated block textures (water, lava, fire, portals, sea lanterns...) are only redrawn while something on screen uses them. Saves GPU work on every texture tick. No change in look: a texture that comes into view starts moving again within one tick (1/20 s). Takes full effect for chunks built after it is switched on. No restart.",
+	"vesuvio.option.idleFps": "Reduce FPS When Idle",
+	"vesuvio.option.idleFps.tooltip": "When the game window is not focused, the frame rate is capped (see Idle FPS Limit). When it is minimized, almost nothing is drawn (one frame a second) while the game keeps running. Playing in the focused window is never affected. No restart.",
+	"vesuvio.option.idleFpsLimit": "Idle FPS Limit",
+	"vesuvio.option.idleFpsLimit.tooltip": "Frame rate while the window is open but not focused (3 to 60). The game itself keeps running at full speed. No restart.",
+	"vesuvio.option.fastStartupCompile": "Faster Shader Compiling (Mac)",
+	"vesuvio.option.fastStartupCompile.tooltip": "macOS only: asks MoltenVK to let Metal compile shaders on more threads at once, so the short stutter when a new effect or block appears for the first time is shorter. No change in look. Needs a restart. Does nothing on Windows and Linux.",
+	"vesuvio.option.asyncSubmit": "Asynchronous Submit (Mac, experimental)",
+	"vesuvio.option.asyncSubmit.tooltip": "macOS only: MoltenVK converts each frame to Metal on its own thread instead of the game's. Can raise FPS when the CPU is the limit; does nothing when the GPU is. Experimental: switch it off if you see flicker, stutter or crashes. No change in look. Needs a restart. Does nothing on Windows and Linux."
+}

@@ -15,7 +15,8 @@
 		]
 	},
 	"mixins": [
-		"vesuvio.mixins.json"
+		"vesuvio.mixins.json",
+		"vesuvio.frame.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.19.5",
