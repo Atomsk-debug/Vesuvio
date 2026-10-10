@@ -56,7 +56,8 @@ public final class AnimatedTextures {
 	}
 
 	public static void init() {
-		// Touching the class creates the setting.
+		// Touching the class creates the setting. F3, the settings screen's box, the stats log and the benchmark.
+		it.cosimo.vesuvio.ui.VesuvioStats.register("animated sprites paused", () -> pausedLastTick);
 	}
 
 	/** AtlasManager.tick, before any atlas cycles. Render thread. */

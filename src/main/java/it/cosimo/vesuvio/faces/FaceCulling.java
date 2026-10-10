@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 
 import it.cosimo.vesuvio.VesuvioConfig;
 import it.cosimo.vesuvio.Vesuvio;
+import it.cosimo.vesuvio.ui.VesuvioStats;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DynamicGpuData;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
@@ -92,8 +93,18 @@ public final class FaceCulling {
 	private FaceCulling() {
 	}
 
-	/** Called from Vesuvio.onInitializeClient so the settings exist early. */
+	/** Called from Vesuvio.onInitializeClient: makes the settings and registers the counters. */
 	public static void init() {
+		// F3, the settings screen's box, the stats log and the benchmark's counter table.
+		VesuvioStats.register("terrain quads skipped %", FaceCulling::skippedPercent);
+		VesuvioStats.register("face draws added", () -> drawsAddedLastFrame);
+	}
+
+	/** Share of the main view's opaque terrain quads left out last frame, in percent. */
+	private static int skippedPercent() {
+		long skippedQuads = quadsSkippedLastFrame;
+		long all = skippedQuads + quadsDrawnLastFrame;
+		return all == 0 ? 0 : (int) (skippedQuads * 100 / all);
 	}
 
 	/**

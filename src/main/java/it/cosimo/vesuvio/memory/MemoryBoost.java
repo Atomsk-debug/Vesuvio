@@ -47,6 +47,9 @@ public final class MemoryBoost {
 
 	/** Called from Vesuvio.onInitializeClient: makes the settings and drops the start-up lookup tables. */
 	public static void init() {
+		// F3, the settings screen's box, the stats log and the benchmark's counter table (start-up sharing only).
+		it.cosimo.vesuvio.ui.VesuvioStats.register("block shapes shared", () -> shapesShared);
+		it.cosimo.vesuvio.ui.VesuvioStats.register("memory saved (KB)", () -> (int) (estimatedBytesSaved() / 1024));
 		// Every vanilla block (and the blocks of mods that register in their main entry point) exists by now;
 		// the lookup tables would only keep ~100 KB alive. A block made later just starts a new table.
 		// (Only touch the helper classes whose mixins were applied, i.e. whose setting was on at start-up.)

@@ -3,6 +3,7 @@ package it.cosimo.vesuvio.entities;
 import it.cosimo.vesuvio.VesuvioConfig;
 import it.cosimo.vesuvio.entities.mixin.EntityRendererInvoker;
 import it.cosimo.vesuvio.entities.mixin.FrustumInvoker;
+import it.cosimo.vesuvio.ui.VesuvioStats;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -114,8 +115,12 @@ public final class Culling {
 	private Culling() {
 	}
 
-	/** Called from Vesuvio.onInitializeClient so the settings exist early. */
+	/** Called from Vesuvio.onInitializeClient: makes the settings and registers the counters. */
 	public static void init() {
+		// F3, the settings screen's box, the stats log and the benchmark's counter table.
+		VesuvioStats.register("entities culled", () -> entitiesCulledLastFrame);
+		VesuvioStats.register("block entities culled", () -> blockEntitiesCulledLastFrame);
+		VesuvioStats.register("particles culled", () -> particlesCulledLastFrame);
 	}
 
 	// ------------------------------------------------------------------ frame
