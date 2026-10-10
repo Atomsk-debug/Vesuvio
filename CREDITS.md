@@ -14,3 +14,7 @@ Ideas only, no code copied:
 - Leaf face culling (`it.cosimo.vesuvio.leaves`): dropping leaf faces buried behind other leaves follows the idea
   of OptiFine's "Smart Leaves" and of CullLeaves (MIT) / MoreCulling's leaf culling modes;
   the depth-3 "smart" default, the look-ahead dirtying and all code are Vesuvio's own.
+- Settings screen laid out like Sodium's (pages on the left, options list, description box): layout idea only
+  (`ui/VesuvioSettingsScreen.java`).
+- Adding a key mapping by appending it to `Options.keyMappings` before `Options.load`: the approach Fabric API's
+  key binding registry uses (Apache 2.0), idea only, own code (`ui/mixin/OptionsKeyMixin.java`).
