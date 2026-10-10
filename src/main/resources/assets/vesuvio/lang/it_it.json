@@ -1,0 +1,12 @@
+{
+	"vesuvio.option.worldEntitySectionLookup": "Ricerca rapida delle entità",
+	"vesuvio.option.worldEntitySectionLookup.tooltip": "Quando il gioco cerca entità vicino a un punto (mob che si spingono, tramogge che raccolgono oggetti, mob che cercano un bersaglio), controlla solo le poche zone intorno a quel punto invece di scorrere un intero elenco ordinato. Stesse entità, stesso ordine: nessun cambiamento nel gioco o nella grafica. Funziona in giocatore singolo e per il tuo giocatore in multigiocatore. Senza riavvio.",
+	"vesuvio.option.worldRareEntityIndex": "Salta le entità contro cui non si urta",
+	"vesuvio.option.worldRareEntityIndex.tooltip": "Solo barche, carrelli da miniera, shulker e ghast felici bloccano chi ci urta, e solo i carrelli contenitore e le barche con baule possono rifornire una tramoggia. Ogni zona tiene un breve elenco di questi, così mob in movimento, oggetti a terra e tramogge ferme non controllano più ogni mucca e ogni oggetto intorno. Stessi risultati di vanilla: nessun cambiamento nel gioco. Molto utile in farm di mob e zone di raccolta oggetti. Richiede il riavvio.",
+	"vesuvio.option.worldPathTypeCache": "Ricorda i tipi di blocco per i percorsi",
+	"vesuvio.option.worldPathTypeCache.tooltip": "I mob che cercano un percorso chiedono \"che tipo di blocco è questo\" per centinaia di blocchi; la risposta dipende solo dal blocco, quindi viene calcolata una volta per tipo di blocco e ricordata (e dimenticata quando si ricaricano i data pack). Stessi percorsi di vanilla. Solo giocatore singolo (su un server i percorsi li calcola il server). Senza riavvio.",
+	"vesuvio.option.worldPoiVerticalRange": "Ricerche di villici e api più mirate",
+	"vesuvio.option.worldPoiVerticalRange.tooltip": "Villici che cercano letti e postazioni di lavoro, api che cercano l'alveare e la comparsa dei golem cercano in una sfera intorno a sé, ma vanilla prima legge tutte le altezze di ogni chunk. Qui si leggono solo le altezze che la sfera raggiunge. Stessi risultati, stesso ordine: nessun cambiamento nel gioco. Solo giocatore singolo. Senza riavvio.",
+	"vesuvio.option.worldFastSuffocationCheck": "Controllo soffocamento più rapido",
+	"vesuvio.option.worldFastSuffocationCheck.tooltip": "Ogni mob controlla a ogni tick se ha la testa dentro un blocco. Qui si fa lo stesso controllo senza gli oggetti in più che vanilla crea per farlo. Stesso risultato: nessun cambiamento nel gioco. Solo giocatore singolo. Senza riavvio."
+}

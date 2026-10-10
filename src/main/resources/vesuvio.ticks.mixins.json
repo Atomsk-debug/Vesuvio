@@ -1,0 +1,22 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.ticks.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"BlockStatePathTypeMixin",
+		"EntitySectionMixin",
+		"EntitySectionStorageMixin",
+		"EntitySuffocationMixin",
+		"HopperBlockEntityMixin",
+		"LevelEntityGetterAdapterAccessor",
+		"LevelMixin",
+		"MappedRegistryMixin",
+		"PoiManagerMixin",
+		"SectionStorageAccess",
+		"WalkNodeEvaluatorMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
