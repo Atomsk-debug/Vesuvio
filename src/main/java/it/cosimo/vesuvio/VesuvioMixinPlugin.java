@@ -23,6 +23,7 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 			Map.entry("ResortThrottleMixin", List.of("RenderSectionStateMixin")),
 			Map.entry("ExtractSchedulingMixin", List.of("RenderSectionInvoker")),
 			Map.entry("UberBufferBudgetMixin", List.of("StagedEntryAccessor", "StagingBufferAccessor")),
+			Map.entry("StagingMappedMixin", List.of("StagingCpuMixin")),
 			// entities
 			Map.entry("LevelExtractorMixin", List.of("EntityCullStateMixin", "BlockEntityCullStateMixin",
 					"EntityRendererInvoker", "FrustumInvoker")),

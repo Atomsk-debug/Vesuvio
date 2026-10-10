@@ -99,6 +99,7 @@ public final class ChunkUploads {
 		heldLastFrame = held;
 		backlogFrames = held > 0 ? backlogFrames + 1 : 0;
 		active = false;
+		ChunkStaging.endFrame();
 	}
 
 	/**

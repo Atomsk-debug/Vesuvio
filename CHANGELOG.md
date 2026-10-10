@@ -8,6 +8,13 @@
 - Keep Compiled Shaders (Frame page, on): vanilla compiles every render pipeline without a Vulkan pipeline cache,
   so the driver redoes all of it each launch. Vesuvio keeps one, saves it to `vesuvio-cache/` and reuses it:
   faster start and no first-use shader hitches after the first launch, mostly on Windows.
+- Merge Upload Barriers (Frame page, on): the Vulkan backend put a full GPU barrier after every copy and buffer
+  write. Back-to-back copies that touch different memory now share one, recorded before the next render pass,
+  clear, read-back, overlapping copy or submit. Chunk-loading frames go from hundreds of barriers (and, on Mac,
+  Metal blit encoders) to a handful. Counter "upload barriers merged".
+- Direct Chunk Staging (World page, on): finished chunk meshes are written straight into mapped GPU-visible memory
+  and sent with one GPU copy, instead of a second CPU copy into transient memory first. Works with the chunk upload
+  budget. Counters "chunk KB staged direct" and "chunk MB staged direct".
 
 ## 0.1.2
 - Benchmark: a run stopped early (a key, a click, a move) now keeps the steps it already measured, in latest.log

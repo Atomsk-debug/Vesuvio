@@ -13,6 +13,8 @@
 		"SectionCopyTrimMixin",
 		"StagedEntryAccessor",
 		"StagingBufferAccessor",
+		"StagingCpuMixin",
+		"StagingMappedMixin",
 		"UberBufferBudgetMixin",
 		"UploadBudgetMixin"
 	],

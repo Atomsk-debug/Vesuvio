@@ -14,5 +14,6 @@ public final class FrameBoost {
 		IdleFps.init();
 		MoltenVkSettings.init();
 		PipelineDiskCache.init();
+		TransferBarriers.init();
 	}
 }
