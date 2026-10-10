@@ -59,6 +59,7 @@ Turned off automatically when FerriteCore or ModernFix is installed, since they 
 | Faster Shader Compiling (`fastStartupCompile`) | On, restart | macOS only: lets Metal compile shaders on more threads, so first-time stutters are shorter. |
 | Keep Compiled Shaders (`pipelineCache`) | On, restart | Saves the driver's compiled shaders (Vulkan pipeline cache) to `vesuvio-cache/` when you quit and reuses them next launch: faster start, no hitch the first time a new mob, effect or shader pass shows. Checked against the GPU and driver. Biggest gain on Windows. |
 | Asynchronous Submit (`asyncSubmit`) | Off, restart | macOS only, experimental: MoltenVK converts each frame to Metal on its own thread. Can help when the CPU is the limit. |
+| Merge Upload Barriers (`mergeTransferBarriers`) | On | Back-to-back copies to the graphics card that touch different memory share one full barrier instead of one each; the barrier is still recorded before anything that could use their data. Fewer GPU stalls and, on Mac, fewer Metal command groups when chunks load. |
 
 ## World
 
@@ -68,6 +69,7 @@ Turned off automatically when FerriteCore or ModernFix is installed, since they 
 | Skip Empty Sections (`skipEmptySections`) | On | Pieces of the world that hold only air (most of the sky) are not built at all. |
 | Lighter Section Copies (`trimSectionCopies`) | On | Each section copy keeps only its own chests, signs and other block entities. |
 | Chunk Upload Budget (`chunkUploadBudget`) | 2 ms | Most time per frame spent sending finished chunks to the graphics card. 0 is vanilla (everything at once). |
+| Direct Chunk Staging (`mappedChunkStaging`) | On | Finished chunks are written straight into memory the graphics card reads, so each upload is one GPU copy without a second CPU copy first. Up to about 150 MB more memory. Takes effect the next time no chunk is waiting. |
 | Fast Entity Lookups (`worldEntitySectionLookup`) | On | Entity searches look only at the areas inside the search box. |
 | Skip Entities Nothing Can Bump (`worldRareEntityIndex`) | On, restart | Collision checks and hoppers look only at the few entity kinds that can matter to them. |
 | Remember Pathfinding Block Types (`worldPathTypeCache`) | On | Mobs' path finding remembers each block's type instead of working it out again. |
