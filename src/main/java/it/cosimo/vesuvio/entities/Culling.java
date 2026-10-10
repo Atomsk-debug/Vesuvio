@@ -206,6 +206,8 @@ public final class Culling {
 				batch.clear();
 			}
 		}
+		// The hooks act only inside extract(): with the frame state cleared below, they must not act after it.
+		entitiesOn = blockEntityFrustumOn = blockEntityOcclusionOn = particlesOn = false;
 		minecraft = null;
 		cameraEntity = null;
 		frustum = null;
