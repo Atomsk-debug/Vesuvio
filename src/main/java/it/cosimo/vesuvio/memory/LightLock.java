@@ -22,6 +22,11 @@ public final class LightLock {
 	private static final VarHandle HOLDER = find();
 	/** False if the field can't be found: containers then keep vanilla's detector (PalettedContainerMixin). */
 	public static final boolean AVAILABLE = HOLDER != null;
+	/**
+	 * The detector every container gets when LightLock is used: one shared object, never locked, that only means
+	 * "use LightLock". (Mixin rejects null from a constructor redirect at run time, so a marker stands in for "none".)
+	 */
+	public static final ThreadingDetector MARKER = new ThreadingDetector("vesuvio-light-lock");
 
 	private LightLock() {
 	}
