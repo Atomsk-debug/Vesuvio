@@ -70,5 +70,15 @@
 	"vesuvio.option.blockEntityCulling": "Culling dei blocchi speciali",
 	"vesuvio.option.blockEntityCulling.tooltip": "Non disegna bauli, cartelli, stendardi, scatole di shulker, teste e gli altri blocchi con entità che sono fuori dalla visuale o nascosti dietro blocchi pieni. I raggi dei fari, i varchi dell'End e i blocchi struttura vengono sempre disegnati. L'aspetto non cambia, ma uno che entra in vista da dietro un muro può comparire con un fotogramma di ritardo. Effetto immediato, senza riavvio.",
 	"vesuvio.option.particleCulling": "Culling delle particelle",
-	"vesuvio.option.particleCulling.tooltip": "Non disegna le particelle nei punti che il gioco sa già che non puoi vedere (lo stesso controllo che nasconde grotte e stanze dietro i muri). Le particelle fuori dalla visuale le salta già il gioco. Nessuna differenza visiva. Effetto immediato, senza riavvio."
+	"vesuvio.option.particleCulling.tooltip": "Non disegna le particelle nei punti che il gioco sa già che non puoi vedere (lo stesso controllo che nasconde grotte e stanze dietro i muri). Le particelle fuori dalla visuale le salta già il gioco. Nessuna differenza visiva. Effetto immediato, senza riavvio.",
+	"vesuvio.option.animatedTextures": "Anima solo le texture visibili",
+	"vesuvio.option.animatedTextures.tooltip": "Le texture animate dei blocchi (acqua, lava, fuoco, portali, lanterne marine...) vengono ridisegnate solo mentre qualcosa sullo schermo le usa. Risparmia lavoro della GPU a ogni tick delle texture. L'aspetto non cambia: una texture che entra in vista riprende a muoversi entro un tick (1/20 di secondo). Ha pieno effetto sui chunk costruiti dopo averla attivata. Nessun riavvio.",
+	"vesuvio.option.idleFps": "Riduci gli FPS quando inattivo",
+	"vesuvio.option.idleFps.tooltip": "Quando la finestra del gioco non è in primo piano, gli FPS vengono limitati (vedi Limite FPS inattivo). Quando è ridotta a icona non si disegna quasi nulla (un fotogramma al secondo), ma il gioco continua a girare. Giocare con la finestra in primo piano non cambia mai. Nessun riavvio.",
+	"vesuvio.option.idleFpsLimit": "Limite FPS inattivo",
+	"vesuvio.option.idleFpsLimit.tooltip": "FPS mentre la finestra è aperta ma non in primo piano (da 3 a 60). Il gioco continua a girare a piena velocità. Nessun riavvio.",
+	"vesuvio.option.fastStartupCompile": "Compilazione shader più rapida (Mac)",
+	"vesuvio.option.fastStartupCompile.tooltip": "Solo macOS: chiede a MoltenVK di far compilare a Metal gli shader su più thread insieme, così il breve scatto quando un effetto o un blocco compare per la prima volta dura meno. L'aspetto non cambia. Richiede il riavvio. Su Windows e Linux non fa nulla.",
+	"vesuvio.option.asyncSubmit": "Invio asincrono (Mac, sperimentale)",
+	"vesuvio.option.asyncSubmit.tooltip": "Solo macOS: MoltenVK converte ogni fotogramma in Metal su un thread suo invece che su quello del gioco. Può alzare gli FPS quando il limite è la CPU; non fa nulla quando il limite è la GPU. Sperimentale: disattivalo se vedi sfarfallii, scatti o crash. L'aspetto non cambia. Richiede il riavvio. Su Windows e Linux non fa nulla."
 }

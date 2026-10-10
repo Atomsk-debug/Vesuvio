@@ -32,3 +32,9 @@ Ideas only, no code copied:
   background thread, results applied a frame later; idea from LogisticsCraft's OcclusionCulling
   (https://github.com/LogisticsCraft/OcclusionCulling, MIT, Copyright (c) tr7zw / LogisticsCraft) as used by
   EntityCulling. Independent implementation, no code copied from either.
+- Animate only the animated sprites that are visible (`frame/AnimatedTextures.java`): idea from Sodium
+  (CaffeineMC, PolyForm Shield 1.0.0), own code and own visibility tracking.
+- Lower frame rate while unfocused, skip drawing while minimized (`frame/IdleFps.java`): idea from Dynamic FPS
+  (juliand665 and LostLuma, MIT), own code, nothing ported.
+- MoltenVK settings through VK_EXT_layer_settings at instance creation (`frame/MoltenVkSettings.java`): the
+  documented MoltenVK configuration parameters (Khronos MoltenVK, Apache 2.0), own code.
