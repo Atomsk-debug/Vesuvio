@@ -36,6 +36,10 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 			Map.entry("CullLevelExtractorMixin", List.of("CullEntityRendererInvoker", "FogRendererAccessor")),
 			Map.entry("CullLevelRendererMixin", List.of("FogRendererAccessor")),
 			Map.entry("FogParticleGroupMixin", List.of("ParticleAccessor")),
+			// models: the sign side casts SignText to the holder; without the font generation a kept layout could
+			// outlive a resource reload; without the sign side the text side never sees a cached line (harmless).
+			Map.entry("SignTextCacheMixin", List.of("SignTextLinesMixin", "FontSetGenerationMixin")),
+			Map.entry("TextFeatureCacheMixin", List.of("FontSetGenerationMixin")),
 			// faces
 			Map.entry("SectionCompilerMixin", List.of("SectionCompilerResultsMixin")),
 			Map.entry("CompiledSectionMeshMixin", List.of("SectionCompilerResultsMixin")),

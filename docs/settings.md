@@ -37,6 +37,8 @@ effect the next time the game starts; all others apply live.
 | Sign Text Culling (`signTextCulling`) | On | Skips sign text on the side facing away from you, and all of it once each letter is under one pixel. |
 | Item Frame Culling (`itemFrameCulling`) | On | Skips item frames when you are behind the solid wall they hang on, and the framed item or map once it is under one pixel. |
 | Beacon Beam Culling (`beaconBeamCulling`) | On | Skips beacon beams wholly outside your view (vanilla draws every beam every frame). |
+| Faster Entity Models (`fastEntityModels`) | On | Each corner of a model box (mobs, players, chests...) is moved into place once instead of once per face that uses it. Exactly the same vertices, bit for bit. |
+| Cache Sign Text (`signTextCache`) | On | Each sign line's glyph layout is kept instead of being redone every frame; only its vertices are written each frame. Rebuilt after a resource pack or font change; obfuscated text is never kept. |
 
 ## Memory (all need a restart)
 

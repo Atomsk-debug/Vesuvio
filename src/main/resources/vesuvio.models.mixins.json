@@ -1,0 +1,17 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.models.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"FontSetGenerationMixin",
+		"ModelCubeMixin",
+		"ModelsFrameMixin",
+		"SignTextCacheMixin",
+		"SignTextLinesMixin",
+		"TextFeatureCacheMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
