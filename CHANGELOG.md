@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1
+- Fix: 0.3.0 crashed at launch when a saved pipeline cache existed (vesuvio-cache/, a few MB after the first
+  session). The saved data was copied onto LWJGL's small per-thread stack; it now goes in heap memory that is freed
+  right after. Any failure while loading the cache (also an Error) now starts the game without the cache instead of
+  stopping it, and saved caches over 64 MB are ignored. Existing cache files are read normally; nothing to delete.
+- The Vulkan instance extension list read for the MoltenVK settings no longer uses LWJGL's stack either (it grows
+  with every installed layer).
+
 ## 0.3.0
 - GPU Pass Timers (Frame page, off, live): a diagnostic for "where does the GPU time go". Vulkan timestamps
   (vkCmdWriteTimestamp2) right before and right after every render pass, always outside the pass, and around each

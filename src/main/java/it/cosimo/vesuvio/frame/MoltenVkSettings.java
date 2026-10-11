@@ -172,16 +172,21 @@ public final class MoltenVkSettings {
 			if (VK10.vkEnumerateInstanceExtensionProperties((String) null, count, null) != VK10.VK_SUCCESS) {
 				return false;
 			}
-			VkExtensionProperties.Buffer props = VkExtensionProperties.calloc(count.get(0), stack);
-			if (VK10.vkEnumerateInstanceExtensionProperties((String) null, count, props) != VK10.VK_SUCCESS) {
-				return false;
-			}
-			for (int i = 0; i < count.get(0); i++) {
-				if (name.equals(props.get(i).extensionNameString())) {
-					return true;
+			// On the heap: 260 bytes per extension, and with many layers installed the list can outgrow LWJGL's stack.
+			VkExtensionProperties.Buffer props = VkExtensionProperties.calloc(count.get(0));
+			try {
+				if (VK10.vkEnumerateInstanceExtensionProperties((String) null, count, props) != VK10.VK_SUCCESS) {
+					return false;
 				}
+				for (int i = 0; i < count.get(0); i++) {
+					if (name.equals(props.get(i).extensionNameString())) {
+						return true;
+					}
+				}
+				return false;
+			} finally {
+				props.free();
 			}
-			return false;
 		}
 	}
 

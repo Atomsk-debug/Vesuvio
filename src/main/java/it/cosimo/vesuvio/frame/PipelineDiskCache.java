@@ -1,6 +1,5 @@
 package it.cosimo.vesuvio.frame;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.LongBuffer;
@@ -38,7 +37,8 @@ public final class PipelineDiskCache {
 	public static final VesuvioConfig.Toggle ENABLED = VesuvioConfig.toggle("frame", "pipelineCache", true, true);
 
 	private static final int HEADER = 32;
-	private static final long MAX_BYTES = 256L * 1024 * 1024;
+	/** Larger saved caches are ignored (and not written): real ones are a few MB. */
+	private static final long MAX_BYTES = 64L * 1024 * 1024;
 	private static final long SAVE_EVERY_NS = 60_000_000_000L;
 
 	private static long cache;
@@ -70,8 +70,10 @@ public final class PipelineDiskCache {
 			file = FabricLoader.getInstance().getGameDir().resolve("vesuvio-cache").resolve(String.format(Locale.ROOT,
 					"pipelines-%04x-%04x.bin", props.vendorID(), props.deviceID()));
 			byte[] data = read(file, props);
+			// The saved data goes in native heap memory: it can be megabytes, far more than LWJGL's small per-thread
+			// stack holds (a 3.5 MB cache on the stack crashed 0.3.0 at launch).
+			ByteBuffer initial = data == null ? null : MemoryUtil.memAlloc(data.length).put(data).flip();
 			try (MemoryStack stack = MemoryStack.stackPush()) {
-				ByteBuffer initial = data == null ? null : stack.malloc(data.length).put(data).flip();
 				long handle = create(vkDevice, initial, stack);
 				if (handle == 0L && initial != null) {
 					Vesuvio.LOGGER.info("Vesuvio: the driver refused the saved pipeline cache, starting a new one");
@@ -79,13 +81,26 @@ public final class PipelineDiskCache {
 					data = null;
 				}
 				cache = handle;
+			} finally {
+				if (initial != null) {
+					MemoryUtil.memFree(initial);
+				}
 			}
 			device = vkDevice;
 			lastSave = System.nanoTime();
 			status = cache == 0L ? "failed" : data == null ? "new" : "loaded " + data.length / 1024 + " KB";
 			Vesuvio.LOGGER.info("Vesuvio pipeline cache: {} ({})", status, file.getFileName());
-		} catch (RuntimeException e) {
+		} catch (Throwable e) {
+			// Anything at all (also an Error from native memory): the game starts without a cache, as vanilla does.
+			if (cache != 0L) {
+				try {
+					VK10.vkDestroyPipelineCache(vkDevice, cache, null);
+				} catch (Throwable ignored) {
+					// Nothing more to do: the handle is dropped.
+				}
+			}
 			cache = 0L;
+			device = null;
 			status = "failed";
 			Vesuvio.LOGGER.warn("Vesuvio: pipeline cache not used", e);
 		}
@@ -159,7 +174,7 @@ public final class PipelineDiskCache {
 			} finally {
 				MemoryUtil.memFree(data);
 			}
-		} catch (IOException | RuntimeException e) {
+		} catch (Throwable e) {
 			Vesuvio.LOGGER.warn("Vesuvio: could not save the pipeline cache", e);
 		}
 	}
@@ -183,7 +198,7 @@ public final class PipelineDiskCache {
 				}
 			}
 			return data;
-		} catch (IOException | RuntimeException e) {
+		} catch (Throwable e) {
 			Vesuvio.LOGGER.info("Vesuvio: saved pipeline cache unreadable, starting a new one ({})", e.toString());
 			return null;
 		}
