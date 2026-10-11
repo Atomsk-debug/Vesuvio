@@ -178,6 +178,13 @@ public final class VesuvioConfig {
 		return LOADED.getProperty(key, fallback);
 	}
 
+	/** Stores a raw value that is not a setting (something remembered for the next start) and saves the file. */
+	public static synchronized void setRaw(String key, String value) {
+		load();
+		LOADED.setProperty(key, value);
+		save();
+	}
+
 	private static void load() {
 		if (loaded) {
 			return;

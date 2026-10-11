@@ -98,7 +98,9 @@ public final class FaceSorter {
 			return null;
 		}
 		VertexFormatElement position = format.getElement("Position");
-		if (position == null || position.format() != GpuFormat.RGB32_FLOAT) {
+		// Floats (vanilla's BLOCK) or half floats (compactTerrainVertices): read as the GPU reads them.
+		boolean half = position != null && position.format() == GpuFormat.RGBA16_FLOAT;
+		if (position == null || position.format() != GpuFormat.RGB32_FLOAT && !half) {
 			return null;
 		}
 		int vertices = state.vertexCount();
@@ -118,7 +120,7 @@ public final class FaceSorter {
 		boolean inOrder = true;
 		int previous = 0;
 		for (int q = 0; q < quads; q++) {
-			int group = classify(base + (long) q * quadBytes, stride);
+			int group = classify(base + (long) q * quadBytes, stride, half);
 			dest[q] = group;
 			starts[group + 1]++;
 			inOrder &= group >= previous;
@@ -167,15 +169,16 @@ public final class FaceSorter {
 		return starts;
 	}
 
-	/** The group of the quad whose first vertex position is at {@code v0}. */
-	private static int classify(long v0, int stride) {
+	/** The group of the quad whose first vertex position is at {@code v0} (three floats, or with {@code half} halves). */
+	private static int classify(long v0, int stride, boolean half) {
 		long v1 = v0 + stride;
 		long v2 = v1 + stride;
 		long v3 = v2 + stride;
-		float x0 = MemoryUtil.memGetFloat(v0), y0 = MemoryUtil.memGetFloat(v0 + 4), z0 = MemoryUtil.memGetFloat(v0 + 8);
-		float x1 = MemoryUtil.memGetFloat(v1), y1 = MemoryUtil.memGetFloat(v1 + 4), z1 = MemoryUtil.memGetFloat(v1 + 8);
-		float x2 = MemoryUtil.memGetFloat(v2), y2 = MemoryUtil.memGetFloat(v2 + 4), z2 = MemoryUtil.memGetFloat(v2 + 8);
-		float x3 = MemoryUtil.memGetFloat(v3), y3 = MemoryUtil.memGetFloat(v3 + 4), z3 = MemoryUtil.memGetFloat(v3 + 8);
+		int c = half ? 2 : 4;
+		float x0 = get(v0, half), y0 = get(v0 + c, half), z0 = get(v0 + 2 * c, half);
+		float x1 = get(v1, half), y1 = get(v1 + c, half), z1 = get(v1 + 2 * c, half);
+		float x2 = get(v2, half), y2 = get(v2 + c, half), z2 = get(v2 + 2 * c, half);
+		float x3 = get(v3, half), y3 = get(v3 + c, half), z3 = get(v3 + 2 * c, half);
 		if (x0 == x1 && x0 == x2 && x0 == x3) {
 			// Normal's x of triangle 0 1 2 and of triangle 2 3 0.
 			float a = (y1 - y0) * (z2 - z0) - (z1 - z0) * (y2 - y0);
@@ -193,6 +196,10 @@ public final class FaceSorter {
 			return axis(z0, a, b, PZ, NZ);
 		}
 		return UNASSIGNED;
+	}
+
+	private static float get(long pointer, boolean half) {
+		return half ? Float.float16ToFloat(MemoryUtil.memGetShort(pointer)) : MemoryUtil.memGetFloat(pointer);
 	}
 
 	/**
