@@ -18,7 +18,7 @@ and uses less memory. It runs on its own or next to Etna, and Etna's shadows get
 
 Made first for Apple Silicon Macs (MoltenVK), and meant to work on Windows and Linux as well.
 
-> **Status: in development.** Version 0.1.0 is being built. Each part below ships only once it has been
+> **Status: in development.** Version 0.3.1 is in testing. Each part below ships only once it has been
 > checked in game.
 
 ## Features
@@ -28,6 +28,13 @@ Made first for Apple Silicon Macs (MoltenVK), and meant to work on Windows and L
   you before doing any work on them.
 * Hides leaf faces buried inside a canopy, keeping the outer layers you actually see.
 * Skips mobs, chests, signs and particles hidden behind walls or outside your view.
+* Skips terrain, mobs and particles lost in thick fog (under water, in lava, in the Nether, with Blindness),
+  sign text seen from behind, item frames behind their wall and beacon beams out of view.
+* Talks to the Vulkan renderer directly: clears are folded into the passes that follow them, back-to-back
+  uploads share one GPU barrier, repeated binds are skipped, framebuffers are kept instead of rebuilt every
+  pass, and terrain draw lists are reused while nothing changed.
+* On Apple silicon (shared memory): mob, particle and GUI vertices are written straight where the GPU reads
+  them, with no extra copy.
 
 **Every frame**
 * Updates animated textures (water, lava, fire, portals) only when they are on screen.
@@ -35,11 +42,18 @@ Made first for Apple Silicon Macs (MoltenVK), and meant to work on Windows and L
   come back.
 * Smoother chunk loading when you move fast.
 * On Macs: lets MoltenVK compile shaders in parallel, so new effects don't stall the game.
+* Keeps compiled shaders on disk, so the next launch skips the driver's work and first-use hitches.
+* Caps the frame rate while paused behind a menu or while the window is covered.
 
 **Memory and world**
 * Smaller block-state tables: less memory, fewer pauses for garbage collection.
+* Memory check: measures what the game really uses and tells you if the launcher's maximum memory is too low or
+  too high for your computer, with the number to set.
 * Faster world ticking in single player, with the game's rules exactly as in vanilla: same redstone, same
   mobs, same farms.
+* Smoother chunk loading: chunks are built nearest first, a few at a time, and sent to the graphics card
+  within a time budget, so joining a world or flying over new terrain no longer brings long frames; empty sky
+  sections are not built at all.
 
 ## Install
 

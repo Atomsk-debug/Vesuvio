@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.draws.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"VulkanCommandEncoderMixin",
+		"VulkanRenderPassMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

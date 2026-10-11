@@ -1,0 +1,24 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.chunks.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"CompileTaskStartMixin",
+		"ExtractSchedulingMixin",
+		"RenderSectionInvoker",
+		"RenderSectionStateMixin",
+		"RenderedAllMixin",
+		"ResortThrottleMixin",
+		"SectionCopyTrimMixin",
+		"StagedEntryAccessor",
+		"StagingBufferAccessor",
+		"StagingCpuMixin",
+		"StagingMappedMixin",
+		"UberBufferBudgetMixin",
+		"UploadBudgetMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

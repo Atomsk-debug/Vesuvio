@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.leaves.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"LeafBlockChangeMixin",
+		"LeafCompileMixin",
+		"LeafFaceCullMixin",
+		"LeafSettingPollMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

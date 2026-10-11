@@ -15,7 +15,20 @@
 		]
 	},
 	"mixins": [
-		"vesuvio.mixins.json"
+		"vesuvio.mixins.json",
+		"vesuvio.leaves.mixins.json",
+		"vesuvio.ui.mixins.json",
+		"vesuvio.memory.mixins.json",
+		"vesuvio.faces.mixins.json",
+		"vesuvio.entities.mixins.json",
+		"vesuvio.culling.mixins.json",
+		"vesuvio.frame.mixins.json",
+		"vesuvio.ticks.mixins.json",
+		"vesuvio.chunks.mixins.json",
+		"vesuvio.clears.mixins.json",
+		"vesuvio.draws.mixins.json",
+		"vesuvio.vertex.mixins.json",
+		"vesuvio.models.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.19.5",

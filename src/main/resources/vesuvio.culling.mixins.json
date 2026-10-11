@@ -1,0 +1,21 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.culling.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"CullEntityRendererInvoker",
+		"CullEntityVisibilityMixin",
+		"CullLevelExtractorMixin",
+		"CullLevelRendererMixin",
+		"CullSectionMeshMixin",
+		"FogParticleGroupMixin",
+		"FogRendererAccessor",
+		"ItemFrameItemMixin",
+		"ParticleAccessor",
+		"SignTextMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

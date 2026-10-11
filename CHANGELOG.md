@@ -1,0 +1,120 @@
+# Changelog
+
+## 0.3.1
+- Fix: 0.3.0 crashed at launch when a saved pipeline cache existed (vesuvio-cache/, a few MB after the first
+  session). The saved data was copied onto LWJGL's small per-thread stack; it now goes in heap memory that is freed
+  right after. Any failure while loading the cache (also an Error) now starts the game without the cache instead of
+  stopping it, and saved caches over 64 MB are ignored. Existing cache files are read normally; nothing to delete.
+- The Vulkan instance extension list read for the MoltenVK settings no longer uses LWJGL's stack either (it grows
+  with every installed layer).
+
+## 0.3.0
+- GPU Pass Timers (Frame page, off, live): a diagnostic for "where does the GPU time go". Vulkan timestamps
+  (vkCmdWriteTimestamp2) right before and right after every render pass, always outside the pass, and around each
+  command buffer of the frame, one query pool per frame in flight, reset from the CPU and read after the game's own
+  wait for that frame (never waits). Passes are grouped by label, so vanilla's and Etna's passes show by name. F3
+  shows the GPU frame time and the five slowest passes; the benchmark adds a "GPU pass timers" step (user settings
+  plus the timers; its "vs on" is the cost of measuring) and logs a "GPU passes" table: top 15 passes with ms and
+  share, other passes, uploads, and time between passes. Off: no query written, no pool.
+- Keep Framebuffers (Frame page, on): the Vulkan backend made a new VkFramebuffer for every render pass and destroyed
+  it after the frame. Each one is now kept, keyed by render pass, attachment views and size, and reused; it goes when
+  one of its views is closed (deferred like vanilla's), when more than 128 are kept, or with the device. Counters
+  "framebuffers reused" and "framebuffers kept".
+- Direct Vertex Writes (Frame page, on; unified memory only, read from the GPU's memory heaps): the vertex and index
+  buffers of entities, particles and the GUI are made host-visible and written directly, skipping the staging buffer,
+  2 to 4 GPU copies and their barriers a frame. Reuse still goes through the game's own per-frame buffer fences, so a
+  buffer is never rewritten while a frame in flight reads it. Counter "vertex copies skipped".
+- No Metal Argument Buffers (Frame page, off, restart, macOS only): a benchmark knob that passes
+  MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS=0 to MoltenVK through the same layer settings as the other MoltenVK options.
+- Leaving or changing worlds no longer keeps the old world's sections, meshes and draw lists alive in the terrain
+  draw-list cache, nor the last render pass's targets in Clear Fusion (also let go at every submit).
+- Treat Hidden Window as Minimized: the hidden/occluded flag must now last half a second of loops (each loop counting
+  at most 100 ms, events polled every loop) before the frame rate drops, so a window SDL briefly reports as occluded
+  after a long stall (Wayland while a world loads) no longer runs at 1 fps for a moment.
+- Less per-frame garbage: Clear Fusion makes its list of clears to send only when there is one (before, every render
+  pass and texture copy made one while the GUI's depth clear waited), and a terrain draw-list reuse copies the kept
+  section list into vanilla's in one go instead of adding thousands of entries one by one.
+- Compact Terrain Vertices (World page, off, restart): chunk meshes in a 20-byte vertex instead of vanilla's 28
+  (half-float positions, 16-bit unorm texture coordinates; colour and light unchanged): about 29% less terrain
+  graphics memory, upload bandwidth and GPU vertex fetch, most with Etna's 3072 shadow pass. No shader change: the
+  GPU's vertex fetch converts the formats. Blocks on the 1/16 grid draw exactly as before; other positions round
+  towards the middle of their 1/16 cell (never onto a block face, so water next to glass does not flicker), texture
+  coordinates round towards the middle of their quad (no sprite bleeding). A block atlas over 8192 switches the next
+  start to float texture coordinates (24 bytes). Works with Etna's terrain and shadow pipelines and with Fabric API's
+  Indigo renderer; face culling and the translucent sort read the half positions. Counter "terrain vertex bytes".
+- Faster Entity Models (Entities page, on): a model box's 8 corners are transformed once instead of its 24 vertices
+  (each corner is shared by 3 faces), through the same JOML call with the same inputs, so every vertex written is
+  bit for bit vanilla's (checked offline against the game's own Cube.compile on 1.2 million random boxes and poses,
+  mirrored and negative-scale ones included). Normals, vertex order and the 11-argument BufferBuilder path are
+  unchanged. A box's corner layout is kept on it and checked against its faces before each use. Counter
+  "model cubes fast".
+- Cache Sign Text (Entities page, on): each sign line's width and glyph layout (plain, and the 8-way outline of
+  glowing text) are kept and replayed with the current pose instead of being redone every frame. Kept per sign line
+  and checked against the font, position, colour, shadow and outline on every use; dropped on resource reload, font
+  option changes and world changes; at most 4096 lines. Obfuscated text and sprite/player-head fonts are never kept.
+  Counter "sign text cache hits".
+- Vesuvio's own per-vertex/per-draw overhead trimmed: hooks that run per vertex, quad, block, entity, particle,
+  section or draw no longer allocate (no CallbackInfo, no wrapped-call argument arrays or boxing, no local
+  wrappers): compact vertices, occlusion and fog culling, the face-culling draw cut, redundant binds, the model fast
+  path, leaf culling, animated-texture collection, the resort throttle, transfer barriers and item frame/sign
+  culling. The chunk scheduler reuses vanilla's region cache, and the terrain draw-list reuse no longer makes a
+  throwaway copy of the kept section list. Same pictures, same counters; no new settings.
+
+## 0.2.0
+- Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now
+  cleared by the render pass as it opens (LOAD_OP_CLEAR, same value, same pixels) instead of by a separate clear
+  that writes the whole image and has the pass read it back; the GUI's dead depth clears are dropped; post chain
+  targets no input reads as depth get no depth texture. Works for any mod's passes (Etna's post chains included).
+  Counters: clears fused, dropped, split.
+- Memory check (Memory page, F3): measures how much memory the game really needs and tells you whether the
+  launcher's maximum memory setting is too low (stutter from constant cleanup), too high for your computer
+  (the system and, on Apple silicon, the graphics run short and start swapping) or fine, with the number to set.
+  A one-time chat message only when something is wrong.
+- Keep Compiled Shaders (Frame page, on): vanilla compiles every render pipeline without a Vulkan pipeline cache,
+  so the driver redoes all of it each launch. Vesuvio keeps one, saves it to `vesuvio-cache/` and reuses it:
+  faster start and no first-use shader hitches after the first launch, mostly on Windows.
+- Merge Upload Barriers (Frame page, on): the Vulkan backend put a full GPU barrier after every copy and buffer
+  write. Back-to-back copies that touch different memory now share one, recorded before the next render pass,
+  clear, read-back, overlapping copy or submit. Chunk-loading frames go from hundreds of barriers (and, on Mac,
+  Metal blit encoders) to a handful. Counter "upload barriers merged".
+- Direct Chunk Staging (World page, on): finished chunk meshes are written straight into mapped GPU-visible memory
+  and sent with one GPU copy, instead of a second CPU copy into transient memory first. Works with the chunk upload
+  budget. Counters "chunk KB staged direct" and "chunk MB staged direct".
+- Skip Repeated Binds (Rendering page, on): in each Vulkan render pass the pipeline already bound is not bound
+  again, and no new descriptor set is made when the bound one already holds the same buffers and textures. Fewer
+  CPU-side commands for every entity, particle and GUI draw. F3 counters `binds skipped`, `desc sets skipped`, and
+  `draws` (draws per frame, each indirect sub-draw counted: Metal draws on the Mac).
+- Face Culling: Smart Splits (Rendering page, on, macOS only): no face culling split costs an extra Metal draw while
+  the CPU is the limit; `faceCullingMinGap` applies as set while the graphics card is the limit, and always on
+  Windows and Linux.
+- Reuse Terrain Draw Lists (Rendering page, on): the main view's terrain draw lists are rebuilt only when the
+  visible sections, their meshes or GPU placement, a fade-in or the camera's face culling cell changed. F3 counter
+  `draw lists reused %`.
+- Submit timers: F3 (`submit encode us`, `submit wait us`, `gpu bound`) and the benchmark table (`encode`, `wait`
+  columns) show how much of each frame goes into `vkQueueSubmit` (MoltenVK's Metal encoding on the Mac) and into
+  waiting for the graphics card.
+- Fog Culling (Rendering page, on): terrain sections, mobs, block entities and particles beyond the point where
+  the fog paints them plain fog colour are skipped (under water, lava, powder snow, Blindness/Darkness, the Nether,
+  boss fog), using the game's own fog distances of each frame. Main view only; off with Improved Transparency,
+  near the world border and while Etna Shaders draws.
+- Sign Text, Item Frame and Beacon Beam Culling (Entities page, on): back-side and sub-pixel sign text, item frames
+  behind the solid wall they hang on, sub-pixel framed items and maps, and beacon beams wholly out of view are
+  skipped. Ideas from More Culling (own code).
+- Frame page: Cap FPS When Paused (on, 60 fps in single player behind a menu) and Treat Hidden Window as Minimized
+  (on: a hidden or fully covered window draws like a minimized one, where the system reports it).
+
+## 0.1.2
+- Benchmark: a run stopped early (a key, a click, a move) now keeps the steps it already measured, in latest.log
+  and on the results screen, instead of throwing them away.
+- Benchmark: the action bar shows the step and the time left while it runs.
+- Benchmark: the player still drifting just after the menu closes no longer stops the run at once.
+
+## 0.1.1
+- Fixed a crash when entering a world with saved chunks ("Exception loading chunk", from the Light Chunk Locks
+  memory setting).
+- Listing a hook in `disabledMixins` now also skips the hooks that depend on it, instead of crashing later.
+
+## 0.1.0
+- First version: leaf culling, face culling, entity/block entity/particle culling, animated textures only when
+  visible, idle frame cap, MoltenVK settings on macOS, memory savings, smoother chunk loading, faster world ticks,
+  settings screen with F8 and a built-in benchmark.

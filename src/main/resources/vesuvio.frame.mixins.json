@@ -1,0 +1,42 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.frame.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"FrameAnimationStateMixin",
+		"FrameAtlasManagerMixin",
+		"FrameAtlasSpriteMixin",
+		"FrameBlockModelFeatureRendererMixin",
+		"FrameCompiledSectionMeshMixin",
+		"FrameFramebufferCacheMixin",
+		"FrameFramerateLimitTrackerMixin",
+		"FrameGpuTimersEncoderMixin",
+		"FrameGpuTimersStagingMixin",
+		"FrameItemFeatureRendererMixin",
+		"FrameLevelRendererMixin",
+		"FrameMinecraftMixin",
+		"FrameMovingBlockFeatureRendererMixin",
+		"FrameMultiPartModelMixin",
+		"FramePipelineCacheCompileMixin",
+		"FramePipelineCacheDeviceMixin",
+		"FrameSectionCompilerMixin",
+		"FrameSectionResultsMixin",
+		"FrameSingleVariantMixin",
+		"FrameSpriteContentsMixin",
+		"FrameStagedDrawAccessor",
+		"FrameStagedVertexBufferInvoker",
+		"FrameStagedVertexBufferMixin",
+		"FrameTextureViewCloseMixin",
+		"FrameTextureAtlasMixin",
+		"FrameTransferBarrierMixin",
+		"FrameUnifiedMemoryMixin",
+		"FrameVertexCountersMixin",
+		"FrameVertexPoolMixin",
+		"FrameVulkanInstanceMixin",
+		"FrameWeightedVariantsMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

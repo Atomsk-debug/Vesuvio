@@ -1,0 +1,17 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.faces.mixin",
+	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"CompiledSectionMeshMixin",
+		"LevelRendererDrawCacheMixin",
+		"LevelRendererFacesMixin",
+		"SectionCompilerMixin",
+		"SectionCompilerResultsMixin",
+		"UberAllocationsMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

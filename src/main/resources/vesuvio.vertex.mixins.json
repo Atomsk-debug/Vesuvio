@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "it.cosimo.vesuvio.vertex.mixin",
+	"plugin": "it.cosimo.vesuvio.vertex.VertexMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"BufferBuilderCompactMixin",
+		"MeshDataCompactMixin",
+		"RenderPipelinesCompactMixin",
+		"TextureAtlasCompactMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
