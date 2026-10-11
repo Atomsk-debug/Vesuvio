@@ -45,6 +45,12 @@
   and checked against the font, position, colour, shadow and outline on every use; dropped on resource reload, font
   option changes and world changes; at most 4096 lines. Obfuscated text and sprite/player-head fonts are never kept.
   Counter "sign text cache hits".
+- Vesuvio's own per-vertex/per-draw overhead trimmed: hooks that run per vertex, quad, block, entity, particle,
+  section or draw no longer allocate (no CallbackInfo, no wrapped-call argument arrays or boxing, no local
+  wrappers): compact vertices, occlusion and fog culling, the face-culling draw cut, redundant binds, the model fast
+  path, leaf culling, animated-texture collection, the resort throttle, transfer barriers and item frame/sign
+  culling. The chunk scheduler reuses vanilla's region cache, and the terrain draw-list reuse no longer makes a
+  throwaway copy of the kept section list. Same pictures, same counters; no new settings.
 
 ## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now
