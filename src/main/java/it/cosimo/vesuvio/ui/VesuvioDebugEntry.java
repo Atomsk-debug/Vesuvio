@@ -36,6 +36,8 @@ public final class VesuvioDebugEntry implements DebugScreenEntry {
 		if (VesuvioConfig.ENABLED.get()) {
 			// A few counters per line, so a long list stays on screen.
 			lines.addAll(VesuvioStats.lines(STATS_PER_LINE));
+			// GPU time per pass, while gpuPassTimers is on (labels change, so these are whole lines, not counters).
+			lines.addAll(it.cosimo.vesuvio.frame.GpuPassTimers.debugLines());
 		}
 		displayer.addToGroup(GROUP, lines);
 	}

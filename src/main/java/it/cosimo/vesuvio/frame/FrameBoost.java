@@ -2,7 +2,7 @@ package it.cosimo.vesuvio.frame;
 
 /**
  * The "frame" page: per-frame work vanilla does for nothing (animated textures nobody sees, full frame rate in an
- * unfocused or minimized window) and the MoltenVK backend settings.
+ * unfocused or minimized window), the MoltenVK backend settings and the GPU pass timers diagnostic.
  */
 public final class FrameBoost {
 	private FrameBoost() {
@@ -17,5 +17,6 @@ public final class FrameBoost {
 		TransferBarriers.init();
 		FramebufferCache.init();
 		MappedVertexPools.init();
+		GpuPassTimers.init();
 	}
 }

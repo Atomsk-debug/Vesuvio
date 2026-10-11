@@ -11,6 +11,8 @@
 		"FrameCompiledSectionMeshMixin",
 		"FrameFramebufferCacheMixin",
 		"FrameFramerateLimitTrackerMixin",
+		"FrameGpuTimersEncoderMixin",
+		"FrameGpuTimersStagingMixin",
 		"FrameItemFeatureRendererMixin",
 		"FrameLevelRendererMixin",
 		"FrameMinecraftMixin",

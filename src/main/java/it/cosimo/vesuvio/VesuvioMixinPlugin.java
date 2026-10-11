@@ -60,6 +60,8 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 			Map.entry("FrameFramebufferCacheMixin", List.of("FrameTextureViewCloseMixin")),
 			Map.entry("FrameTextureViewCloseMixin", List.of("FrameFramebufferCacheMixin")),
 			Map.entry("FrameStagedVertexBufferMixin", List.of("FrameStagedDrawAccessor", "FrameStagedVertexBufferInvoker")),
+			// The staging buffer's timestamps go through the encoder's recorder.
+			Map.entry("FrameGpuTimersStagingMixin", List.of("FrameGpuTimersEncoderMixin")),
 			// ticks
 			Map.entry("LevelMixin", List.of("EntitySectionMixin", "LevelEntityGetterAdapterAccessor")),
 			Map.entry("HopperBlockEntityMixin", List.of("LevelMixin", "EntitySectionMixin")),

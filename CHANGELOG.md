@@ -1,6 +1,13 @@
 # Changelog
 
 ## 0.3.0
+- GPU Pass Timers (Frame page, off, live): a diagnostic for "where does the GPU time go". Vulkan timestamps
+  (vkCmdWriteTimestamp2) right before and right after every render pass, always outside the pass, and around each
+  command buffer of the frame, one query pool per frame in flight, reset from the CPU and read after the game's own
+  wait for that frame (never waits). Passes are grouped by label, so vanilla's and Etna's passes show by name. F3
+  shows the GPU frame time and the five slowest passes; the benchmark adds a "GPU pass timers" step (user settings
+  plus the timers; its "vs on" is the cost of measuring) and logs a "GPU passes" table: top 15 passes with ms and
+  share, other passes, uploads, and time between passes. Off: no query written, no pool.
 - Keep Framebuffers (Frame page, on): the Vulkan backend made a new VkFramebuffer for every render pass and destroyed
   it after the frame. Each one is now kept, keyed by render pass, attachment views and size, and reused; it goes when
   one of its views is closed (deferred like vanilla's), when more than 128 are kept, or with the device. Counters
