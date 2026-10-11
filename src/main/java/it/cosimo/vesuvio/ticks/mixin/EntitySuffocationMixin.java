@@ -2,6 +2,7 @@ package it.cosimo.vesuvio.ticks.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -37,11 +38,19 @@ abstract class EntitySuffocationMixin {
 	@Shadow
 	public abstract Level level();
 
+	/**
+	 * Kept tiny (the loop is in {@link #vesuvio$inWall}) so the JIT inlines it into isInWall and can drop the
+	 * CallbackInfoReturnable it would otherwise allocate per call.
+	 */
 	@Inject(method = "isInWall", at = @At("HEAD"), cancellable = true)
 	private void vesuvio$loopInWall(CallbackInfoReturnable<Boolean> cir) {
-		if (!WorldTicks.SUFFOCATION.on() || this.noPhysics) {
-			return;
+		if (WorldTicks.SUFFOCATION.on() && !this.noPhysics) {
+			cir.setReturnValue(this.vesuvio$inWall());
 		}
+	}
+
+	@Unique
+	private boolean vesuvio$inWall() {
 		TickStats.suffocationChecks++;
 		float checkWidth = this.dimensions.width() * 0.8F;
 		AABB eyeBb = AABB.ofSize(((Entity) (Object) this).getEyePosition(), checkWidth, 1.0E-6, checkWidth);
@@ -64,13 +73,12 @@ abstract class EntitySuffocationMixin {
 							eyeShape = Shapes.create(eyeBb);
 						}
 						if (Shapes.joinIsNotEmpty(state.getCollisionShape(level, pos).move(pos), eyeShape, BooleanOp.AND)) {
-							cir.setReturnValue(true);
-							return;
+							return true;
 						}
 					}
 				}
 			}
 		}
-		cir.setReturnValue(false);
+		return false;
 	}
 }

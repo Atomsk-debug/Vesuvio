@@ -20,19 +20,15 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
-import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 /**
- * Fog culling of entities and block entities, item frames behind their wall and beacon beams out of view, where vanilla
- * picks what to extract for the camera: after its own isEntityVisible in extractVisibleEntities, and around
- * tryExtractRenderState in extractVisibleBlockEntities (the per-section loop for fog, the globally rendered list for
- * beacons).
+ * Fog culling of block entities and beacon beams out of view, where vanilla picks what to extract for the camera:
+ * around tryExtractRenderState in extractVisibleBlockEntities (the per-section loop for fog, the globally rendered
+ * list for beacons). Starts and ends the frame's fog and detail culling. Entities: {@link CullEntityVisibilityMixin}.
  */
 @Mixin(LevelExtractor.class)
 abstract class CullLevelExtractorMixin {
@@ -61,19 +57,6 @@ abstract class CullLevelExtractorMixin {
 	private void vesuvio$endCulling(DeltaTracker deltaTracker, Camera camera, float worldPartialTicks, CallbackInfo ci) {
 		FogCulling.endExtract();
 		DetailCulling.endExtract();
-	}
-
-	@WrapOperation(method = "extractVisibleEntities", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;isEntityVisible(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/culling/Frustum;DDDFJ)Z"))
-	private boolean vesuvio$cullEntity(LevelExtractor self, Entity entity, Frustum frustum, double camX, double camY,
-			double camZ, float partialTicks, long chunkFadeDuration, Operation<Boolean> original) {
-		if (!original.call(self, entity, frustum, camX, camY, camZ, partialTicks, chunkFadeDuration)) {
-			return false;
-		}
-		if (FogCulling.entityHidden(entity, partialTicks, this.levelRenderer.entityRenderDispatcher())) {
-			return false;
-		}
-		return !(entity instanceof ItemFrame frame && DetailCulling.itemFrameHidden(frame, camX, camY, camZ, this.level));
 	}
 
 	@WrapOperation(method = "extractVisibleBlockEntities", at = @At(value = "INVOKE", ordinal = 0,

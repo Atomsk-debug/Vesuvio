@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.renderpearl.backend.vulkan.Destroyable;
@@ -76,14 +77,14 @@ public abstract class FrameFramebufferCacheMixin implements FramebufferCacheHold
 	}
 
 	// The only queueForDestroy in createRenderPass: vanilla's destroy of the pass's framebuffer.
-	@WrapOperation(method = "createRenderPass", at = @At(value = "INVOKE",
+	@WrapWithCondition(method = "createRenderPass", at = @At(value = "INVOKE",
 			target = "Lcom/mojang/renderpearl/backend/vulkan/VulkanCommandEncoder;queueForDestroy(Lcom/mojang/renderpearl/backend/vulkan/Destroyable;)V"))
-	private void vesuvio$keepFramebuffer(VulkanCommandEncoder self, Destroyable destroyable, Operation<Void> original) {
+	private boolean vesuvio$keepFramebuffer(VulkanCommandEncoder self, Destroyable destroyable) {
 		if (this.vesuvio$framebufferKept) {
 			this.vesuvio$framebufferKept = false;
-			return;
+			return false;
 		}
-		original.call(self, destroyable);
+		return true;
 	}
 
 	@Inject(method = "submit", at = @At("HEAD"))

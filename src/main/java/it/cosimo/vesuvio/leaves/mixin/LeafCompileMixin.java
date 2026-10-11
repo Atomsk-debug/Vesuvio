@@ -5,8 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import com.llamalad7.mixinextras.sugar.Local;
 
 import it.cosimo.vesuvio.leaves.LeafCulling;
@@ -18,16 +17,17 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * SectionCompiler.compile: tells {@link LeafCulling} which block is about to be tesselated. The hook is the block's
  * seed lookup, an argument of the tesselate call: Fabric API redirects that call to its own renderer but the argument
- * is still computed here, right before it.
+ * is still computed here, right before it. A ModifyReceiver (returning the same state) runs at the same moment as a
+ * wrapper would, without boxing the seed or wrapping the region local.
  */
 @Mixin(SectionCompiler.class)
 public abstract class LeafCompileMixin {
-	@WrapOperation(method = "compile", at = @At(value = "INVOKE",
+	@ModifyReceiver(method = "compile", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/world/level/block/state/BlockState;getSeed(Lnet/minecraft/core/BlockPos;)J"))
-	private long vesuvio$recordLeaf(BlockState state, BlockPos pos, Operation<Long> original,
+	private BlockState vesuvio$recordLeaf(BlockState state, BlockPos pos,
 			@Local(argsOnly = true) RenderSectionRegion region) {
 		LeafCulling.beginBlock(region, pos, state);
-		return original.call(state, pos);
+		return state;
 	}
 
 	@Inject(method = "compile", at = @At("RETURN"))

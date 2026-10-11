@@ -143,8 +143,13 @@ public final class CompactVertices {
 
 	/** Writes texture coordinates as 16-bit unorms, each rounded to the nearest step. */
 	public static void putUv(long pointer, float u, float v) {
-		MemoryUtil.memPutShort(pointer, unorm(u, 0));
-		MemoryUtil.memPutShort(pointer + 2L, unorm(v, 0));
+		putUnorm(pointer, u);
+		putUnorm(pointer + 2L, v);
+	}
+
+	/** Writes one texture coordinate as a 16-bit unorm, rounded to the nearest step. */
+	public static void putUnorm(long pointer, float c) {
+		MemoryUtil.memPutShort(pointer, unorm(c, 0));
 	}
 
 	/**

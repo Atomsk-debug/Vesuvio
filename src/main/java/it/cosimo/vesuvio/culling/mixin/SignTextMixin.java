@@ -3,8 +3,7 @@ package it.cosimo.vesuvio.culling.mixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 
@@ -21,16 +20,13 @@ import net.minecraft.world.level.block.entity.SignText;
  */
 @Mixin(AbstractSignRenderer.class)
 abstract class SignTextMixin {
-	@WrapOperation(
+	@WrapWithCondition(
 		method = "submit(Lnet/minecraft/client/renderer/blockentity/state/SignRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V",
 		at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/client/renderer/blockentity/AbstractSignRenderer;submitSignText(Lnet/minecraft/client/renderer/blockentity/state/SignRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/world/level/block/entity/SignText;)V")
 	)
-	private void vesuvio$cullSignText(AbstractSignRenderer<?> self, SignRenderState state, PoseStack poseStack,
-			SubmitNodeCollector collector, SignText text, Operation<Void> original,
-			@Local(argsOnly = true) CameraRenderState camera) {
-		if (!DetailCulling.signTextHidden(state, poseStack.last().pose(), camera)) {
-			original.call(self, state, poseStack, collector, text);
-		}
+	private boolean vesuvio$cullSignText(AbstractSignRenderer<?> self, SignRenderState state, PoseStack poseStack,
+			SubmitNodeCollector collector, SignText text, @Local(argsOnly = true) CameraRenderState camera) {
+		return !DetailCulling.signTextHidden(state, poseStack.last().pose(), camera);
 	}
 }

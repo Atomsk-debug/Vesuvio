@@ -170,7 +170,8 @@ public final class LeafCulling {
 	 * the face test then knows where the leaf is. Only leaf blocks are recorded.
 	 */
 	public static void beginBlock(BlockGetter region, BlockPos pos, BlockState state) {
-		if (active == OFF || !(state.getBlock() instanceof LeavesBlock)) {
+		// The type test first: most blocks are not leaves, and it is a plain read where the mode is a volatile one.
+		if (!(state.getBlock() instanceof LeavesBlock) || active == OFF) {
 			return;
 		}
 		CompileContext ctx = CONTEXT.get();
@@ -195,7 +196,7 @@ public final class LeafCulling {
 	 * tesselated, so the identity check ties the call to its position).
 	 */
 	public static boolean cullAtCompile(BlockState state, BlockState neighbor, Direction direction) {
-		if (active == OFF || !(state.getBlock() instanceof LeavesBlock) || !(neighbor.getBlock() instanceof LeavesBlock)) {
+		if (!(state.getBlock() instanceof LeavesBlock) || !(neighbor.getBlock() instanceof LeavesBlock) || active == OFF) {
 			return false;
 		}
 		CompileContext ctx = CONTEXT.get();

@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -32,16 +32,16 @@ import it.cosimo.vesuvio.vertex.TerrainFormat;
  * the format, so vanilla drops them as it does for BLOCK.</li>
  * </ul>
  * Builders of every other format (mode 0) run vanilla's code untouched.
+ *
+ * <p>Cost: every hook here is a {@code @WrapWithCondition}, which calls its handler and nothing else (no
+ * CallbackInfo, no argument array), and each sits on a call only the slow paths make: vanilla's BLOCK and ENTITY
+ * fast paths of the 11-argument addVertex (all block-model and entity vertices drawn outside chunks) never reach
+ * one, and the element-by-element path pays one field compare per position and per texture coordinate written.
  */
 @Mixin(BufferBuilder.class)
 public abstract class BufferBuilderCompactMixin {
 	@Shadow
 	private int vertices;
-	@Shadow
-	private int elementsToFill;
-	@Shadow
-	@Final
-	private int initialElementsToFill;
 	@Shadow
 	@Final
 	private int vertexSize;
@@ -65,11 +65,6 @@ public abstract class BufferBuilderCompactMixin {
 	}
 
 	@Shadow
-	private long beginElement(int semanticID) {
-		throw new AssertionError();
-	}
-
-	@Shadow
 	private static void putRgba(long pointer, int argb) {
 		throw new AssertionError();
 	}
@@ -88,12 +83,18 @@ public abstract class BufferBuilderCompactMixin {
 		}
 	}
 
-	@Inject(method = "addVertex(FFFIFFIIFFF)V", at = @At("HEAD"), cancellable = true)
-	private void vesuvio$compactVertex(float x, float y, float z, int color, float u, float v, int overlayCoords,
-			int lightCoords, float nx, float ny, float nz, CallbackInfo ci) {
+	/**
+	 * The 11-argument addVertex. A compact format is neither BLOCK nor ENTITY, so vanilla's method reaches its last
+	 * branch, {@code VertexConsumer.super.addVertex(...)} (the element-by-element default): a compact builder writes
+	 * the whole vertex here instead and skips that call; any other builder makes it as in vanilla.
+	 */
+	@WrapWithCondition(method = "addVertex(FFFIFFIIFFF)V", at = @At(value = "INVOKE",
+			target = "Lcom/mojang/blaze3d/vertex/VertexConsumer;addVertex(FFFIFFIIFFF)V"))
+	private boolean vesuvio$compactVertex(VertexConsumer self, float x, float y, float z, int color, float u, float v,
+			int overlayCoords, int lightCoords, float nx, float ny, float nz) {
 		int mode = this.vesuvio$mode;
 		if (mode == 0) {
-			return;
+			return true;
 		}
 		long pointer = this.beginVertex();
 		CompactVertices.putPosition(pointer + CompactVertices.POSITION, x, y, z);
@@ -107,7 +108,7 @@ public abstract class BufferBuilderCompactMixin {
 			MemoryUtil.memPutFloat(pointer + CompactVertices.UV0 + 4L, v);
 			putPackedUv(pointer + CompactVertices.UV0 + 8L, lightCoords);
 		}
-		ci.cancel();
+		return false;
 	}
 
 	/**
@@ -130,27 +131,40 @@ public abstract class BufferBuilderCompactMixin {
 		}
 	}
 
-	@Inject(method = "addVertex(FFF)Lcom/mojang/blaze3d/vertex/VertexConsumer;", at = @At("HEAD"), cancellable = true)
-	private void vesuvio$compactPosition(float x, float y, float z, CallbackInfoReturnable<VertexConsumer> cir) {
+	/**
+	 * addVertex(x, y, z): vanilla has already begun the vertex at the Position element (offset 0 in both compact
+	 * formats) and reset the elements to fill; a compact builder writes the position as halves instead of floats.
+	 */
+	@WrapWithCondition(method = "addVertex(FFF)Lcom/mojang/blaze3d/vertex/VertexConsumer;", at = @At(value = "INVOKE",
+			target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;putVec3f(JFFF)V"))
+	private boolean vesuvio$compactPosition(long pointer, float x, float y, float z) {
 		if (this.vesuvio$mode == 0) {
-			return;
+			return true;
 		}
-		long pointer = this.beginVertex();
-		this.elementsToFill = this.initialElementsToFill;
-		CompactVertices.putPosition(pointer + CompactVertices.POSITION, x, y, z);
+		CompactVertices.putPosition(pointer, x, y, z);
 		this.vesuvio$quadCorners = 0;
-		cir.setReturnValue((VertexConsumer) (Object) this);
+		return false;
 	}
 
-	@Inject(method = "setUv", at = @At("HEAD"), cancellable = true)
-	private void vesuvio$compactUv(float u, float v, CallbackInfoReturnable<VertexConsumer> cir) {
+	/** setUv, u (first float write, at the UV0 element vanilla found): 16 bits in the 20-byte format. */
+	@WrapWithCondition(method = "setUv", at = @At(value = "INVOKE", target = "Lorg/lwjgl/system/MemoryUtil;memPutFloat(JF)V",
+			ordinal = 0))
+	private boolean vesuvio$compactU(long pointer, float u) {
 		if (this.vesuvio$mode != 1) {
-			return;
+			return true;
 		}
-		long pointer = this.beginElement(2);
-		if (pointer != -1L) {
-			CompactVertices.putUv(pointer, u, v);
+		CompactVertices.putUnorm(pointer, u);
+		return false;
+	}
+
+	/** setUv, v (second float write, 4 bytes after u in vanilla's layout): right after u's 16 bits. */
+	@WrapWithCondition(method = "setUv", at = @At(value = "INVOKE", target = "Lorg/lwjgl/system/MemoryUtil;memPutFloat(JF)V",
+			ordinal = 1))
+	private boolean vesuvio$compactV(long pointerPlus4, float v) {
+		if (this.vesuvio$mode != 1) {
+			return true;
 		}
-		cir.setReturnValue((VertexConsumer) (Object) this);
+		CompactVertices.putUnorm(pointerPlus4 - 2L, v);
+		return false;
 	}
 }

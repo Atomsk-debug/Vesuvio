@@ -2,7 +2,6 @@ package it.cosimo.vesuvio.faces;
 
 import java.util.List;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.renderpearl.util.PlatformUtil;
 
 import it.cosimo.vesuvio.VesuvioConfig;
@@ -319,15 +318,17 @@ public final class FaceCulling {
 	}
 
 	/**
-	 * The wrapped {@code drawGroup.draws.add(new IndexedDraw(...))} of extractSectionDrawGroups, for one
-	 * layer of one section. Adds the draw as vanilla does, or the one to three draws that cover the groups
-	 * that can face the camera.
+	 * Called right before {@code drawGroup.draws.add(new IndexedDraw(...))} of extractSectionDrawGroups, for one
+	 * layer of one section (vanilla ignores that add's result). Returns true when vanilla's add should run as it
+	 * is (the draw is kept whole); otherwise adds the one to three draws that cover the groups that can face the
+	 * camera to {@code draws} itself and returns false.
 	 */
-	public static boolean add(List<?> draws, Object element, Operation<Boolean> original, Object sectionMesh,
-			ChunkSectionLayer layer, BlockPos origin) {
+	@SuppressWarnings("unchecked")
+	public static boolean keepWhole(List<?> draws, Object element, Object sectionMesh, ChunkSectionLayer layer,
+			BlockPos origin) {
 		if (mode == NONE || !layerOn[layer.ordinal()] || !(element instanceof DynamicGpuData.IndexedDraw draw)
 				|| !(sectionMesh instanceof FaceGroups mesh)) {
-			return original.call(draws, element);
+			return true;
 		}
 		int[][] groups = mesh.vesuvio$faceGroups();
 		if (groups == null) {
@@ -340,23 +341,23 @@ public final class FaceCulling {
 				regroup[i + 1] = origin.getY() >> 4;
 				regroup[i + 2] = origin.getZ() >> 4;
 			}
-			return original.call(draws, element);
+			return true;
 		}
 		int[] starts = groups[layer.ordinal()];
 		if (starts == null) {
-			return original.call(draws, element);
+			return true;
 		}
 		int total = starts[FaceSorter.GROUPS];
 		if (draw.firstIndex() != 0 || draw.indexCount() != total * 6) {
-			return original.call(draws, element);
+			return true;
 		}
 		int visible = mode == MAIN ? mainMask(origin) : directionalMask;
 		if (visible == ALL) {
 			drawn += total;
-			return original.call(draws, element);
+			return true;
 		}
 
-		boolean result = true;
+		List<Object> out = (List<Object>) draws;
 		int runs = 0;
 		int quads = 0;
 		int runStart = -1;
@@ -370,7 +371,7 @@ public final class FaceCulling {
 			if (runStart < 0) {
 				runStart = from;
 			} else if (from > runEnd && from - runEnd >= minGap) {
-				result &= original.call(draws, part(draw, runStart, runEnd));
+				out.add(part(draw, runStart, runEnd));
 				runs++;
 				quads += runEnd - runStart;
 				runStart = from;
@@ -378,20 +379,20 @@ public final class FaceCulling {
 			runEnd = to;
 		}
 		if (runStart >= 0) {
-			result &= original.call(draws, part(draw, runStart, runEnd));
+			out.add(part(draw, runStart, runEnd));
 			runs++;
 			quads += runEnd - runStart;
 		} else {
 			// Every quad faces away. Keep one draw of the first quad (which the GPU culls, as it would have)
 			// rather than none: vanilla's draw lists must not end up empty.
-			result &= original.call(draws, part(draw, 0, 1));
+			out.add(part(draw, 0, 1));
 			runs = 1;
 			quads = 1;
 		}
 		drawn += quads;
 		skipped += total - quads;
 		added += runs - 1;
-		return result;
+		return false;
 	}
 
 	private static DynamicGpuData.IndexedDraw part(DynamicGpuData.IndexedDraw draw, int fromQuad, int toQuad) {

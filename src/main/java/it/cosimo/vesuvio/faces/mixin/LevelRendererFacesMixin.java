@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -74,13 +75,17 @@ abstract class LevelRendererFacesMixin {
 		FaceCulling.endPrepare();
 	}
 
-	/** {@code drawGroup.draws.add(new DynamicGpuData.IndexedDraw(...))}: the third List.add in the method. */
-	@WrapOperation(
+	/**
+	 * {@code drawGroup.draws.add(new DynamicGpuData.IndexedDraw(...))}: the third List.add in the method, whose
+	 * result vanilla drops. A WrapWithCondition: vanilla's add runs when the draw stays whole, else FaceCulling has
+	 * added the cut draws itself. Per section and layer, so no Operation or local wrappers are allocated here.
+	 */
+	@WrapWithCondition(
 		method = "extractSectionDrawGroups",
 		at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 2)
 	)
-	private boolean vesuvio$cutByFacing(List<?> draws, Object draw, Operation<Boolean> original,
-			@Local SectionMesh sectionMesh, @Local ChunkSectionLayer layer, @Local BlockPos renderOffset) {
-		return FaceCulling.add(draws, draw, original, sectionMesh, layer, renderOffset);
+	private boolean vesuvio$cutByFacing(List<?> draws, Object draw, @Local SectionMesh sectionMesh,
+			@Local ChunkSectionLayer layer, @Local BlockPos renderOffset) {
+		return FaceCulling.keepWhole(draws, draw, sectionMesh, layer, renderOffset);
 	}
 }

@@ -3,6 +3,7 @@ package it.cosimo.vesuvio.models;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
@@ -38,8 +39,12 @@ public final class ModelFastPath {
 	static int cubes;
 	public static int cubesLastFrame;
 
-	/** Corner positions transformed this call (3 floats each). Per thread: models are drawn on the render thread. */
+	/**
+	 * Corner positions transformed this call (3 floats each). Models are drawn on the render thread, which uses
+	 * {@link #renderScratch} without a thread-local lookup per cube; any other thread gets its own array.
+	 */
 	private static final ThreadLocal<float[]> SCRATCH = ThreadLocal.withInitial(() -> new float[24]);
+	private static float[] renderScratch = new float[24];
 
 	private ModelFastPath() {
 	}
@@ -159,20 +164,25 @@ public final class ModelFastPath {
 	/**
 	 * Writes the cube the way {@code ModelPart.Cube.compile(pose, builder, lightCoords, overlayCoords, color)} does,
 	 * from {@code layout} (which must {@link Layout#matches match} the cube). False, with nothing written, if the
-	 * layout has nothing to save: the caller then runs vanilla's code.
+	 * layout has nothing to save: the caller then runs vanilla's code. {@code scratchVector} is vanilla's own scratch
+	 * vector of that call (its contents do not matter: every use overwrites it).
 	 */
 	public static boolean compile(Layout layout, PoseStack.Pose pose, VertexConsumer builder, int lightCoords,
-			int overlayCoords, int color) {
+			int overlayCoords, int color, Vector3f scratchVector) {
 		if (!layout.worthIt) {
 			return false;
 		}
 		Matrix4f matrix = pose.pose();
-		Vector3f scratchVector = new Vector3f();
 		float[] corners = layout.corners;
-		float[] transformed = SCRATCH.get();
+		boolean renderThread = RenderSystem.isOnRenderThread();
+		float[] transformed = renderThread ? renderScratch : SCRATCH.get();
 		if (transformed.length < corners.length) {
 			transformed = new float[corners.length];
-			SCRATCH.set(transformed);
+			if (renderThread) {
+				renderScratch = transformed;
+			} else {
+				SCRATCH.set(transformed);
+			}
 		}
 		for (int c = 0; c < corners.length; c += 3) {
 			Vector3f pos = matrix.transformPosition(corners[c], corners[c + 1], corners[c + 2], scratchVector);

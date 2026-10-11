@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
@@ -33,31 +34,23 @@ public abstract class ClearsFrontendEncoderMixin {
 	@Final
 	private CommandEncoderBackend backend;
 
-	@WrapOperation(method = "clearColorTexture", at = @At(value = "INVOKE",
+	@WrapWithCondition(method = "clearColorTexture", at = @At(value = "INVOKE",
 			target = "Lcom/mojang/renderpearl/backend/api/CommandEncoderBackend;clearColorTexture(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lorg/joml/Vector4fc;)V"))
-	private void vesuvio$deferColorClear(CommandEncoderBackend instance, GpuTexture texture, Vector4fc color,
-			Operation<Void> original) {
-		if (!ClearFusion.deferColor(instance, texture, color)) {
-			original.call(instance, texture, color);
-		}
+	private boolean vesuvio$deferColorClear(CommandEncoderBackend instance, GpuTexture texture, Vector4fc color) {
+		return !ClearFusion.deferColor(instance, texture, color);
 	}
 
-	@WrapOperation(method = "clearColorAndDepthTextures", at = @At(value = "INVOKE",
+	@WrapWithCondition(method = "clearColorAndDepthTextures", at = @At(value = "INVOKE",
 			target = "Lcom/mojang/renderpearl/backend/api/CommandEncoderBackend;clearColorAndDepthTextures(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/renderpearl/api/textures/GpuTexture;D)V"))
-	private void vesuvio$deferColorAndDepthClear(CommandEncoderBackend instance, GpuTexture colorTexture, Vector4fc color,
-			GpuTexture depthTexture, double depth, Operation<Void> original) {
-		if (!ClearFusion.deferColorAndDepth(instance, colorTexture, color, depthTexture, depth)) {
-			original.call(instance, colorTexture, color, depthTexture, depth);
-		}
+	private boolean vesuvio$deferColorAndDepthClear(CommandEncoderBackend instance, GpuTexture colorTexture,
+			Vector4fc color, GpuTexture depthTexture, double depth) {
+		return !ClearFusion.deferColorAndDepth(instance, colorTexture, color, depthTexture, depth);
 	}
 
-	@WrapOperation(method = "clearDepthTexture", at = @At(value = "INVOKE",
+	@WrapWithCondition(method = "clearDepthTexture", at = @At(value = "INVOKE",
 			target = "Lcom/mojang/renderpearl/backend/api/CommandEncoderBackend;clearDepthTexture(Lcom/mojang/renderpearl/api/textures/GpuTexture;D)V"))
-	private void vesuvio$deferDepthClear(CommandEncoderBackend instance, GpuTexture texture, double depth,
-			Operation<Void> original) {
-		if (!ClearFusion.deferDepth(instance, texture, depth)) {
-			original.call(instance, texture, depth);
-		}
+	private boolean vesuvio$deferDepthClear(CommandEncoderBackend instance, GpuTexture texture, double depth) {
+		return !ClearFusion.deferDepth(instance, texture, depth);
 	}
 
 	@WrapOperation(method = "createRenderPass(Lcom/mojang/renderpearl/api/commands/RenderPassDescriptor;)Lcom/mojang/renderpearl/api/commands/RenderPass;",

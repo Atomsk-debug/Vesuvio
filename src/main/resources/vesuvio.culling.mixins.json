@@ -5,8 +5,10 @@
 	"compatibilityLevel": "JAVA_25",
 	"client": [
 		"CullEntityRendererInvoker",
+		"CullEntityVisibilityMixin",
 		"CullLevelExtractorMixin",
 		"CullLevelRendererMixin",
+		"CullSectionMeshMixin",
 		"FogParticleGroupMixin",
 		"FogRendererAccessor",
 		"ItemFrameItemMixin",

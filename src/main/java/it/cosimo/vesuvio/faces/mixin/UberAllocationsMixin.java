@@ -1,15 +1,12 @@
 package it.cosimo.vesuvio.faces.mixin;
 
-import java.util.Map;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.blaze3d.vertex.StagingBuffer;
 import com.mojang.blaze3d.vertex.UberGpuBuffer;
 import com.mojang.renderpearl.api.device.GpuDevice;
@@ -29,10 +26,9 @@ abstract class UberAllocationsMixin {
 		SectionDrawCache.allocationsChanged();
 	}
 
-	@WrapOperation(method = "freeAllocation", at = @At(value = "INVOKE",
+	@ModifyExpressionValue(method = "freeAllocation", at = @At(value = "INVOKE",
 			target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
-	private Object vesuvio$freed(Map<?, ?> allocations, Object key, Operation<Object> original) {
-		Object removed = original.call(allocations, key);
+	private Object vesuvio$freed(Object removed) {
 		if (removed != null) {
 			SectionDrawCache.allocationsChanged();
 		}

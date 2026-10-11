@@ -7,8 +7,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 
 import it.cosimo.vesuvio.entities.Culling;
 import net.minecraft.client.Camera;
@@ -18,7 +20,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
-import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.world.entity.Entity;
@@ -53,12 +54,11 @@ public abstract class LevelExtractorMixin {
 		Culling.endFrame();
 	}
 
-	@WrapOperation(method = "extractVisibleEntities", at = @At(value = "INVOKE",
+	/** Vanilla's isEntityVisible answer, narrowed; entity and partial tick are the loop's locals it was called with. */
+	@ModifyExpressionValue(method = "extractVisibleEntities", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;isEntityVisible(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/culling/Frustum;DDDFJ)Z"))
-	private boolean vesuvio$occlusionCullEntity(LevelExtractor self, Entity entity, Frustum frustum, double camX,
-			double camY, double camZ, float partialTicks, long chunkFadeDuration, Operation<Boolean> original) {
-		return original.call(self, entity, frustum, camX, camY, camZ, partialTicks, chunkFadeDuration)
-				&& !Culling.entityHidden(entity, partialTicks, levelRenderer.entityRenderDispatcher());
+	private boolean vesuvio$occlusionCullEntity(boolean visible, @Local Entity entity, @Local float partialTicks) {
+		return visible && !Culling.entityHidden(entity, partialTicks, levelRenderer.entityRenderDispatcher());
 	}
 
 	@WrapOperation(method = "extractVisibleBlockEntities", at = @At(value = "INVOKE",
