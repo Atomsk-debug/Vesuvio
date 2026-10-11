@@ -142,8 +142,17 @@ public final class SectionDrawCache {
 			if (valid && cellKnown && sectionDispatcher == dispatcher && respectOrder == respectTranslucentOrder
 					&& ALLOCATIONS.get() == allocations && key == faceKey && Arrays.equals(cellNow, cell)
 					&& sameSections(visible, fadeDuration)) {
-				// One bulk copy into vanilla's fresh list, instead of thousands of adds that grow it step by step.
-				((List<Object>) sectionInfos).addAll(Arrays.asList(infos));
+				// Sized once (to the capacity addAll would give vanilla's fresh list), then filled: unlike
+				// addAll(Arrays.asList(infos)), this does not copy the whole kept array into a throwaway one first.
+				List<Object> infosOut = (List<Object>) sectionInfos;
+				if (infosOut instanceof ArrayList<Object> arrayList) {
+					arrayList.ensureCapacity(arrayList.size() + infos.length);
+					for (Object info : infos) {
+						arrayList.add(info);
+					}
+				} else {
+					infosOut.addAll(Arrays.asList(infos));
+				}
 				Map<ChunkSectionLayer, List<Object>> groupsOut = (Map) drawGroups;
 				for (ChunkSectionLayer layer : LAYERS) {
 					List<Object> kept = groups[layer.ordinal()];

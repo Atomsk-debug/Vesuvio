@@ -3,6 +3,7 @@ package it.cosimo.vesuvio.draws.mixin;
 import java.nio.IntBuffer;
 
 import org.lwjgl.vulkan.VkCommandBuffer;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -11,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.backend.api.BackendRenderPipeline;
 import com.mojang.renderpearl.backend.vulkan.VulkanRenderPass;
@@ -65,37 +66,42 @@ public abstract class VulkanRenderPassMixin {
 		vesuvio$samePipeline = next != null && next == this.pipeline;
 	}
 
-	@WrapOperation(method = "setPipeline", at = @At(value = "INVOKE",
+	@WrapWithCondition(method = "setPipeline", at = @At(value = "INVOKE",
 			target = "Lorg/lwjgl/vulkan/VK12;vkCmdBindPipeline(Lorg/lwjgl/vulkan/VkCommandBuffer;IJ)V"))
-	private void vesuvio$skipSamePipeline(VkCommandBuffer commandBuffer, int bindPoint, long vkPipeline,
-			Operation<Void> original) {
+	private boolean vesuvio$skipSamePipeline(VkCommandBuffer commandBuffer, int bindPoint, long vkPipeline) {
 		if (vesuvio$samePipeline && RedundantBinds.SKIP.on()) {
 			RedundantBinds.pipelineBindSkipped();
-			return;
+			return false;
 		}
 		// A real bind: from here on only a set made after it may be reused.
 		vesuvio$setPipeline = null;
-		original.call(commandBuffer, bindPoint, vkPipeline);
+		return true;
 	}
 
-	@Inject(method = "pushDescriptors", at = @At("HEAD"), cancellable = true)
-	private void vesuvio$skipSameDescriptors(CallbackInfo ci) {
+	/**
+	 * pushDescriptors' first step, its "anything dirty?" test: answering false makes vanilla return right there,
+	 * as a cancel at HEAD would, but without a CallbackInfo per draw (the RETURN hook below then sees
+	 * vesuvio$pushing false and does nothing).
+	 */
+	@ModifyExpressionValue(method = "pushDescriptors", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD,
+			target = "Lcom/mojang/renderpearl/backend/vulkan/VulkanRenderPass;anyDescriptorDirty:Z"))
+	private boolean vesuvio$skipSameDescriptors(boolean dirty) {
 		vesuvio$pushing = false;
-		if (!this.anyDescriptorDirty || this.pipeline == null) {
-			return;
+		if (!dirty || this.pipeline == null) {
+			return dirty;
 		}
 		if (!RedundantBinds.SKIP.on()) {
 			vesuvio$setPipeline = null;
-			return;
+			return true;
 		}
 		if (vesuvio$setPipeline == this.pipeline
 				&& RedundantBinds.sameValues(this.pipeline.uniforms(), this.uniforms, vesuvio$setValues)) {
 			this.anyDescriptorDirty = false;
 			RedundantBinds.descriptorSetSkipped();
-			ci.cancel();
-			return;
+			return false;
 		}
 		vesuvio$pushing = true;
+		return true;
 	}
 
 	@Inject(method = "pushDescriptors", at = @At("RETURN"))
