@@ -421,15 +421,15 @@ public final class FogCulling {
 	}
 
 	/** QuadParticleGroup.extractRenderState, for a particle vanilla is about to extract: true to skip it. */
-	public static boolean particleHidden(SingleQuadParticle particle, double x, double y, double z, float partialTicks) {
+	public static boolean particleHidden(SingleQuadParticle particle, float partialTicks) {
 		if (!EXTRACT.active || !VANILLA_CLASS.get(particle.getClass())) {
 			return false;
 		}
-		ParticleAccessor old = (ParticleAccessor) particle;
+		ParticleAccessor pos = (ParticleAccessor) particle;
 		// Drawn at the interpolated position, a camera-facing quad reaching quadSize from it (corners: times sqrt 2).
-		double cx = Mth.lerp(partialTicks, old.vesuvio$xo(), x);
-		double cy = Mth.lerp(partialTicks, old.vesuvio$yo(), y);
-		double cz = Mth.lerp(partialTicks, old.vesuvio$zo(), z);
+		double cx = Mth.lerp(partialTicks, pos.vesuvio$xo(), pos.vesuvio$x());
+		double cy = Mth.lerp(partialTicks, pos.vesuvio$yo(), pos.vesuvio$y());
+		double cz = Mth.lerp(partialTicks, pos.vesuvio$zo(), pos.vesuvio$z());
 		double r = Math.abs(particle.getQuadSize(partialTicks)) * 1.5 + 0.5;
 		if (!(r < 16.0)) {
 			return false;

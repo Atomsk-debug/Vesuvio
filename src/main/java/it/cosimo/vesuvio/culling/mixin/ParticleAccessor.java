@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import net.minecraft.client.particle.Particle;
 
-/** A particle's position last tick: it is drawn between that and the current one. */
+/** A particle's position last tick and now: it is drawn between the two. */
 @Mixin(Particle.class)
 public interface ParticleAccessor {
 	@Accessor("xo")
@@ -16,4 +16,13 @@ public interface ParticleAccessor {
 
 	@Accessor("zo")
 	double vesuvio$zo();
+
+	@Accessor("x")
+	double vesuvio$x();
+
+	@Accessor("y")
+	double vesuvio$y();
+
+	@Accessor("z")
+	double vesuvio$z();
 }

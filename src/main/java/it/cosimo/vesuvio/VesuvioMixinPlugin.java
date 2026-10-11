@@ -32,8 +32,14 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 			// entities
 			Map.entry("LevelExtractorMixin", List.of("EntityCullStateMixin", "BlockEntityCullStateMixin",
 					"EntityRendererInvoker", "FrustumInvoker")),
+			// reads the particle's position through the culling package's accessor
+			Map.entry("QuadParticleGroupMixin", List.of("ParticleAccessor")),
 			// culling
 			Map.entry("CullLevelExtractorMixin", List.of("CullEntityRendererInvoker", "FogRendererAccessor")),
+			// entity fog culling runs on the state CullLevelExtractorMixin sets up each frame
+			Map.entry("CullEntityVisibilityMixin", List.of("CullLevelExtractorMixin", "CullEntityRendererInvoker")),
+			// section fog culling only acts inside the main-view mark CullLevelRendererMixin sets
+			Map.entry("CullSectionMeshMixin", List.of("CullLevelRendererMixin")),
 			Map.entry("CullLevelRendererMixin", List.of("FogRendererAccessor")),
 			Map.entry("FogParticleGroupMixin", List.of("ParticleAccessor")),
 			// models: the sign side casts SignText to the holder; without the font generation a kept layout could

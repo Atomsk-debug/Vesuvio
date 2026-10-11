@@ -17,9 +17,6 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
-import net.minecraft.client.renderer.chunk.CompiledSectionMesh;
-import net.minecraft.client.renderer.chunk.SectionMesh;
-import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.client.renderer.gizmos.DrawableGizmoPrimitives;
 import net.minecraft.client.renderer.state.OptionsRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
@@ -28,7 +25,7 @@ import net.minecraft.client.renderer.state.level.LevelRenderState;
 /**
  * Fog culling, terrain side. Vanilla's own two prepare calls in render() are wrapped to mark the main view (a shader
  * mod's shadow pass prepares outside the mark and keeps every section); inside, extractSectionDrawGroups sees a
- * fully fogged section's mesh as empty, so it adds no draw for it. Also notes whether the frame draws debug gizmos
+ * fully fogged section's mesh as empty, so it adds no draw for it ({@link CullSectionMeshMixin}). Also notes whether the frame draws debug gizmos
  * (no fog on them), and brackets submitFeatures for the sign text counter.
  */
 @Mixin(LevelRenderer.class)
@@ -69,13 +66,6 @@ abstract class CullLevelRendererMixin {
 		} finally {
 			FogCulling.endMainView();
 		}
-	}
-
-	@WrapOperation(method = "extractSectionDrawGroups", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/renderer/chunk/SectionRenderDispatcher$RenderSection;getSectionMesh()Lnet/minecraft/client/renderer/chunk/SectionMesh;"))
-	private SectionMesh vesuvio$fogCullSection(SectionRenderDispatcher.RenderSection section,
-			Operation<SectionMesh> original) {
-		return FogCulling.sectionHidden(section) ? CompiledSectionMesh.EMPTY : original.call(section);
 	}
 
 	@Inject(method = "submitFeatures", at = @At("HEAD"))
