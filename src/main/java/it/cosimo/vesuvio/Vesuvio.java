@@ -22,6 +22,7 @@ public final class Vesuvio implements ClientModInitializer {
 		it.cosimo.vesuvio.draws.Draws.init();
 		it.cosimo.vesuvio.entities.Culling.init();
 		it.cosimo.vesuvio.culling.CullingBoost.init();
+		it.cosimo.vesuvio.models.Models.init();
 		it.cosimo.vesuvio.frame.FrameBoost.init();
 		WorldTicks.init();
 		it.cosimo.vesuvio.chunks.ChunkUpdates.init();
@@ -41,5 +42,6 @@ public final class Vesuvio implements ClientModInitializer {
 	public static void levelChanged() {
 		it.cosimo.vesuvio.faces.SectionDrawCache.release();
 		it.cosimo.vesuvio.clears.ClearFusion.release();
+		it.cosimo.vesuvio.models.SignTextCache.invalidate();
 	}
 }

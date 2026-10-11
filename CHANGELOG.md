@@ -27,6 +27,17 @@
   coordinates round towards the middle of their quad (no sprite bleeding). A block atlas over 8192 switches the next
   start to float texture coordinates (24 bytes). Works with Etna's terrain and shadow pipelines and with Fabric API's
   Indigo renderer; face culling and the translucent sort read the half positions. Counter "terrain vertex bytes".
+- Faster Entity Models (Entities page, on): a model box's 8 corners are transformed once instead of its 24 vertices
+  (each corner is shared by 3 faces), through the same JOML call with the same inputs, so every vertex written is
+  bit for bit vanilla's (checked offline against the game's own Cube.compile on 1.2 million random boxes and poses,
+  mirrored and negative-scale ones included). Normals, vertex order and the 11-argument BufferBuilder path are
+  unchanged. A box's corner layout is kept on it and checked against its faces before each use. Counter
+  "model cubes fast".
+- Cache Sign Text (Entities page, on): each sign line's width and glyph layout (plain, and the 8-way outline of
+  glowing text) are kept and replayed with the current pose instead of being redone every frame. Kept per sign line
+  and checked against the font, position, colour, shadow and outline on every use; dropped on resource reload, font
+  option changes and world changes; at most 4096 lines. Obfuscated text and sprite/player-head fonts are never kept.
+  Counter "sign text cache hits".
 
 ## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now
