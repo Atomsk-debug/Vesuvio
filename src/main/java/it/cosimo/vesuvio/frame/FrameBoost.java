@@ -16,5 +16,6 @@ public final class FrameBoost {
 		PipelineDiskCache.init();
 		TransferBarriers.init();
 		FramebufferCache.init();
+		MappedVertexPools.init();
 	}
 }

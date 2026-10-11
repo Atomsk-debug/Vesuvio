@@ -5,6 +5,10 @@
   it after the frame. Each one is now kept, keyed by render pass, attachment views and size, and reused; it goes when
   one of its views is closed (deferred like vanilla's), when more than 128 are kept, or with the device. Counters
   "framebuffers reused" and "framebuffers kept".
+- Direct Vertex Writes (Frame page, on; unified memory only, read from the GPU's memory heaps): the vertex and index
+  buffers of entities, particles and the GUI are made host-visible and written directly, skipping the staging buffer,
+  2 to 4 GPU copies and their barriers a frame. Reuse still goes through the game's own per-frame buffer fences, so a
+  buffer is never rewritten while a frame in flight reads it. Counter "vertex copies skipped".
 
 ## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now

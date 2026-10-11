@@ -55,6 +55,7 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 			// Kept framebuffers must go when their views close, or a reused view handle could match a stale one.
 			Map.entry("FrameFramebufferCacheMixin", List.of("FrameTextureViewCloseMixin")),
 			Map.entry("FrameTextureViewCloseMixin", List.of("FrameFramebufferCacheMixin")),
+			Map.entry("FrameStagedVertexBufferMixin", List.of("FrameStagedDrawAccessor", "FrameStagedVertexBufferInvoker")),
 			// ticks
 			Map.entry("LevelMixin", List.of("EntitySectionMixin", "LevelEntityGetterAdapterAccessor")),
 			Map.entry("HopperBlockEntityMixin", List.of("LevelMixin", "EntitySectionMixin")),
