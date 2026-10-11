@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.0 (in progress)
+- Keep Framebuffers (Frame page, on): the Vulkan backend made a new VkFramebuffer for every render pass and destroyed
+  it after the frame. Each one is now kept, keyed by render pass, attachment views and size, and reused; it goes when
+  one of its views is closed (deferred like vanilla's), when more than 128 are kept, or with the device. Counters
+  "framebuffers reused" and "framebuffers kept".
+- Direct Vertex Writes (Frame page, on; unified memory only, read from the GPU's memory heaps): the vertex and index
+  buffers of entities, particles and the GUI are made host-visible and written directly, skipping the staging buffer,
+  2 to 4 GPU copies and their barriers a frame. Reuse still goes through the game's own per-frame buffer fences, so a
+  buffer is never rewritten while a frame in flight reads it. Counter "vertex copies skipped".
+- No Metal Argument Buffers (Frame page, off, restart, macOS only): a benchmark knob that passes
+  MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS=0 to MoltenVK through the same layer settings as the other MoltenVK options.
+- Leaving or changing worlds no longer keeps the old world's sections, meshes and draw lists alive in the terrain
+  draw-list cache, nor the last render pass's targets in Clear Fusion (also let go at every submit).
+- Treat Hidden Window as Minimized: the hidden/occluded flag must now last half a second of loops (each loop counting
+  at most 100 ms, events polled every loop) before the frame rate drops, so a window SDL briefly reports as occluded
+  after a long stall (Wayland while a world loads) no longer runs at 1 fps for a moment.
+- Less per-frame garbage: Clear Fusion makes its list of clears to send only when there is one (before, every render
+  pass and texture copy made one while the GUI's depth clear waited), and a terrain draw-list reuse copies the kept
+  section list into vanilla's in one go instead of adding thousands of entries one by one.
+
 ## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now
   cleared by the render pass as it opens (LOAD_OP_CLEAR, same value, same pixels) instead of by a separate clear

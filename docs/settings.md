@@ -64,13 +64,16 @@ Turned off automatically when FerriteCore or ModernFix is installed, since they 
 | Animate Only Visible Textures (`animatedTextures`) | On | Water, lava, fire, portal and other animated block textures are redrawn only while something on screen uses them. |
 | Reduce FPS When Idle (`idleFps`) | On | Caps the frame rate while the window is not focused, and draws almost nothing while it is minimized. |
 | Idle FPS Limit (`idleFpsLimit`) | 10 | Frame rate while the window is open but not focused (3 to 60). |
-| Treat Hidden Window as Minimized (`hiddenWindowFps`) | On | A hidden or fully covered window (macOS: Cmd+H, another Space, covered by other windows) draws almost nothing, like a minimized one. Only where the system reports it. |
+| Treat Hidden Window as Minimized (`hiddenWindowFps`) | On | A hidden or fully covered window (macOS: Cmd+H, another Space, covered by other windows) draws almost nothing, like a minimized one, once the system has reported it for half a second of normal frames (so a brief false report after a long load does not drop the frame rate). Only where the system reports it. |
 | Cap FPS When Paused (`pausedFps`) | On | Single player paused behind a menu: frame rate capped at the limit below. |
 | Paused FPS Limit (`pausedFpsLimit`) | 60 | Frame rate while paused behind a menu (10 to 240). |
 | Faster Shader Compiling (`fastStartupCompile`) | On, restart | macOS only: lets Metal compile shaders on more threads, so first-time stutters are shorter. |
 | Keep Compiled Shaders (`pipelineCache`) | On, restart | Saves the driver's compiled shaders (Vulkan pipeline cache) to `vesuvio-cache/` when you quit and reuses them next launch: faster start, no hitch the first time a new mob, effect or shader pass shows. Checked against the GPU and driver. Biggest gain on Windows. |
 | Asynchronous Submit (`asyncSubmit`) | Off, restart | macOS only, experimental: MoltenVK converts each frame to Metal on its own thread. Can help when the CPU is the limit. |
+| No Metal Argument Buffers (`metalArgumentBuffersOff`) | Off, restart | macOS only, a benchmark experiment: sets MoltenVK's `MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS=0`, so each draw's descriptors are bound one by one instead of through a Metal argument buffer. Faster or slower is unknown: benchmark it both ways. Shader packs with more than 16 textures in one shader may fail with it on. |
 | Merge Upload Barriers (`mergeTransferBarriers`) | On | Back-to-back copies to the graphics card that touch different memory share one full barrier instead of one each; the barrier is still recorded before anything that could use their data. Fewer GPU stalls and, on Mac, fewer Metal command groups when chunks load. |
+| Keep Framebuffers (`framebufferCache`) | On | The Vulkan framebuffer of each render pass (which pictures it draws into) is kept and reused while the same pictures are drawn into again, instead of made and thrown away every pass. Thrown away when one of its pictures is. Same picture. Counters: framebuffers reused, framebuffers kept. |
+| Direct Vertex Writes (`mappedVertexPools`) | On | Unified memory only (Apple silicon, integrated GPUs; read from the driver's memory heaps): entity, particle and GUI vertices are written straight into the buffers the GPU draws from, instead of a staging buffer plus a GPU copy and barrier each. A buffer is rewritten only after the GPU finished the frames that used it (the game's own buffer fences). Same picture. Counter: vertex copies skipped. |
 
 ## World
 

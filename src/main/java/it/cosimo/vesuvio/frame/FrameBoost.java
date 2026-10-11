@@ -15,5 +15,7 @@ public final class FrameBoost {
 		MoltenVkSettings.init();
 		PipelineDiskCache.init();
 		TransferBarriers.init();
+		FramebufferCache.init();
+		MappedVertexPools.init();
 	}
 }

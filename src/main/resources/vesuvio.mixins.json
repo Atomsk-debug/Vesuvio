@@ -4,6 +4,7 @@
 	"plugin": "it.cosimo.vesuvio.VesuvioMixinPlugin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"LevelChangeMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

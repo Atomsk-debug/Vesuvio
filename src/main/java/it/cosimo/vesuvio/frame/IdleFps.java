@@ -21,7 +21,10 @@ import net.minecraft.client.Minecraft;
  * vanilla's per-frame work alive, including "pause on lost focus".</li>
  * <li>Window hidden or fully covered ({@link #HIDDEN}): the same as minimized. SDL keeps the window's "occluded" and
  * "hidden" flags (macOS reports Cmd+H, another Space and windows covering it completely; other systems report what
- * they can); they are read once per loop.</li>
+ * they can); they are read once per loop. The flag must stay set for {@link #HIDDEN_CONFIRM_NS} of loops in a row
+ * before it counts, each loop crediting at most {@link #HIDDEN_LOOP_CREDIT_NS}: events are polled at the start of
+ * every loop, so a flag that a long stall left behind (Wayland can report a visible window as occluded while a world
+ * loads) gets several polls to clear before the frame rate drops.</li>
  * <li>Single player paused with a menu open ({@link #PAUSED}): capped at {@link #PAUSED_LIMIT}; the world behind the
  * menu stands still anyway.</li>
  * </ul>
@@ -46,6 +49,13 @@ public final class IdleFps {
 	private static final long MINIMIZED_FRAME_INTERVAL_NS = 1_000_000_000L;
 	/** Frame cap for the one real frame a second while hidden (vanilla's own cap for a minimized window). */
 	private static final int HIDDEN_LIMIT = 10;
+	/** How long the hidden or occluded flag must last, in loop time (see {@link #HIDDEN_LOOP_CREDIT_NS}). */
+	private static final long HIDDEN_CONFIRM_NS = 500_000_000L;
+	/**
+	 * Most of one loop's time that counts towards {@link #HIDDEN_CONFIRM_NS}: a loop that stalled (a world loading)
+	 * polled events only once, so it counts as a short one. At least five polls see the flag before it counts.
+	 */
+	private static final long HIDDEN_LOOP_CREDIT_NS = 100_000_000L;
 
 	public static final int FULL = 0;
 	public static final int UNFOCUSED = 1;
@@ -60,8 +70,13 @@ public final class IdleFps {
 
 	private static long lastFrameNs = System.nanoTime();
 	private static boolean skipping;
-	/** The window was hidden or fully covered at the start of this loop. */
+	/** The window was hidden or fully covered at the start of this loop, for long enough (see beginLoop). */
 	private static boolean hidden;
+	/** SDL reported the window hidden or occluded at the start of the last loop. */
+	private static boolean hiddenFlagLastLoop;
+	/** Loop time the flag has been set in a row, each loop counted up to HIDDEN_LOOP_CREDIT_NS. */
+	private static long hiddenForNs;
+	private static long lastLoopNs = System.nanoTime();
 
 	private IdleFps() {
 	}
@@ -106,9 +121,18 @@ public final class IdleFps {
 	 * piles up between submits).
 	 */
 	public static void beginLoop(Window window) {
-		hidden = HIDDEN.on() && !it.cosimo.vesuvio.ui.VesuvioBenchmark.running() && WindowFlags.hiddenOrOccluded(window);
+		long now = System.nanoTime();
+		boolean flag = HIDDEN.on() && !it.cosimo.vesuvio.ui.VesuvioBenchmark.running() && WindowFlags.hiddenOrOccluded(window);
+		if (!flag) {
+			hiddenForNs = 0L;
+		} else if (hiddenFlagLastLoop) {
+			hiddenForNs += Math.min(now - lastLoopNs, HIDDEN_LOOP_CREDIT_NS);
+		}
+		hiddenFlagLastLoop = flag;
+		lastLoopNs = now;
+		hidden = flag && hiddenForNs >= HIDDEN_CONFIRM_NS;
 		boolean away = SETTING.on() && window.isIconified() || hidden;
-		skipping = away && System.nanoTime() - lastFrameNs < MINIMIZED_FRAME_INTERVAL_NS;
+		skipping = away && now - lastFrameNs < MINIMIZED_FRAME_INTERVAL_NS;
 		if (skipping) {
 			state = hidden && !window.isIconified() ? HIDDEN_WINDOW : MINIMIZED;
 		}
