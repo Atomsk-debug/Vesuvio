@@ -6,24 +6,17 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 
 import it.cosimo.vesuvio.frame.AnimatedTextures;
 import it.cosimo.vesuvio.frame.ModelSprites;
 import it.cosimo.vesuvio.frame.SpriteCollectorHolder;
 import it.cosimo.vesuvio.frame.SpriteSet;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
-import net.minecraft.client.renderer.block.BlockStateModelSet;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.block.FluidModel;
-import net.minecraft.client.renderer.block.FluidRenderer;
 import net.minecraft.client.renderer.block.FluidStateModelSet;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.chunk.SectionCompiler;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
@@ -52,11 +45,9 @@ public abstract class FrameSectionCompilerMixin {
 	 * Every block with a model: its model's animated sprites. The model lookup is an argument of the tesselate call,
 	 * so it runs whichever renderer then draws the block (Fabric API redirects that call to its Indigo renderer).
 	 */
-	@WrapOperation(method = "compile", at = @At(value = "INVOKE",
+	@ModifyExpressionValue(method = "compile", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/client/renderer/block/BlockStateModelSet;get(Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/client/renderer/block/dispatch/BlockStateModel;"))
-	private BlockStateModel vesuvio$collectModelSprites(BlockStateModelSet modelSet, BlockState state,
-			Operation<BlockStateModel> original, @Local SectionCompiler.Results results) {
-		BlockStateModel model = original.call(modelSet, state);
+	private BlockStateModel vesuvio$collectModelSprites(BlockStateModel model, @Local SectionCompiler.Results results) {
 		SpriteSet sprites = ((SpriteCollectorHolder) (Object) results).vesuvio$sprites();
 		if (sprites != null) {
 			ModelSprites.collect(model, sprites);
@@ -66,27 +57,34 @@ public abstract class FrameSectionCompilerMixin {
 
 	/**
 	 * Every fluid: its model's sprites. Only water and lava have vanilla fluid models; any other fluid (from a mod) is
-	 * drawn with sprites this cannot know (Fabric API's fluid render handlers), so its section is "unknown".
+	 * drawn with sprites this cannot know (Fabric API's fluid render handlers), so its section is "unknown". The hook
+	 * is the "has a fluid" test right before the fluid is tesselated; what it collects does not depend on the
+	 * tesselation, so collecting just before it instead of just after gives the same set.
 	 */
-	@WrapOperation(method = "compile", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/renderer/block/FluidRenderer;tesselate(Lnet/minecraft/client/renderer/block/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/client/renderer/block/FluidRenderer$Output;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/material/FluidState;)V"))
-	private void vesuvio$collectFluidSprites(FluidRenderer fluidRenderer, BlockAndTintGetter level, BlockPos pos,
-			FluidRenderer.Output output, BlockState blockState, FluidState fluidState, Operation<Void> original,
+	@ModifyExpressionValue(method = "compile", at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/world/level/material/FluidState;isEmpty()Z"))
+	private boolean vesuvio$collectFluidSprites(boolean empty, @Local FluidState fluidState,
 			@Local SectionCompiler.Results results) {
-		original.call(fluidRenderer, level, pos, output, blockState, fluidState);
-		SpriteSet sprites = ((SpriteCollectorHolder) (Object) results).vesuvio$sprites();
-		if (sprites != null) {
-			Fluid type = fluidState.getType();
-			if (type != Fluids.WATER && type != Fluids.FLOWING_WATER && type != Fluids.LAVA && type != Fluids.FLOWING_LAVA) {
-				sprites.markUnknown();
-				return;
+		if (!empty) {
+			SpriteSet sprites = ((SpriteCollectorHolder) (Object) results).vesuvio$sprites();
+			if (sprites != null) {
+				this.vesuvio$addFluid(fluidState, sprites);
 			}
-			FluidModel model = this.fluidModelSet.get(fluidState);
-			sprites.add(model.stillMaterial().sprite());
-			sprites.add(model.flowingMaterial().sprite());
-			if (model.overlayMaterial() != null) {
-				sprites.add(model.overlayMaterial().sprite());
-			}
+		}
+		return empty;
+	}
+
+	private void vesuvio$addFluid(FluidState fluidState, SpriteSet sprites) {
+		Fluid type = fluidState.getType();
+		if (type != Fluids.WATER && type != Fluids.FLOWING_WATER && type != Fluids.LAVA && type != Fluids.FLOWING_LAVA) {
+			sprites.markUnknown();
+			return;
+		}
+		FluidModel model = this.fluidModelSet.get(fluidState);
+		sprites.add(model.stillMaterial().sprite());
+		sprites.add(model.flowingMaterial().sprite());
+		if (model.overlayMaterial() != null) {
+			sprites.add(model.overlayMaterial().sprite());
 		}
 	}
 }
