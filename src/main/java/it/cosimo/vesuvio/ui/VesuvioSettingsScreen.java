@@ -336,6 +336,9 @@ public final class VesuvioSettingsScreen extends Screen {
 		if (s.needsRestart) {
 			note.append(" ").append(Component.translatable("vesuvio.screen.needsRestart"));
 		}
+		if (s == it.cosimo.vesuvio.frame.GpuPassTimers.SETTING && it.cosimo.vesuvio.frame.GpuPassTimers.unsupported()) {
+			note.append(" ").append(Component.translatable("vesuvio.option.gpuPassTimers.unsupported"));
+		}
 		return new Description(name(s).copy().withStyle(ChatFormatting.BOLD), body, note);
 	}
 

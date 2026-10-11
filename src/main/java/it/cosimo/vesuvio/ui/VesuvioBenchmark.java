@@ -8,6 +8,7 @@ import java.util.Locale;
 import it.cosimo.vesuvio.VesuvioConfig;
 import it.cosimo.vesuvio.Vesuvio;
 import it.cosimo.vesuvio.draws.SubmitTimers;
+import it.cosimo.vesuvio.frame.GpuPassTimers;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -29,6 +30,12 @@ import org.jspecify.annotations.Nullable;
  * the game's own frame timer (getFrameTimeNs, the "cpu" column) leaves out. The "encode" and "wait" columns split the
  * end of the frame (SubmitTimers): time inside vkQueueSubmit (on macOS, MoltenVK's Metal encoding) and time waiting
  * for the GPU to finish an earlier frame, both in ms per frame.
+ *
+ * Right after "Vesuvio on" comes one more step, "GPU pass timers": the same settings with gpuPassTimers on
+ * (GpuPassTimers), which logs a "GPU passes" table: the graphics card's time per frame for each render pass (by its
+ * label), uploads and the rest. gpuPassTimers is off in every other step whatever the player set (it is a diagnostic
+ * and costs a little), so its own step's "vs on" is what measuring costs; it is put back at the end. The step is left
+ * out when the graphics driver cannot write timestamps.
  *
  * The settings are only changed in memory and never saved during a run; every switch is put back when it
  * ends, and when it is stopped: any key or mouse button pressed, the player moving or turning, a menu or
@@ -77,7 +84,9 @@ public final class VesuvioBenchmark {
 	}
 
 	private enum Kind {
-		OFF, ON, FLIP
+		OFF, ON, FLIP,
+		/** The player's settings with gpuPassTimers on, for the GPU passes table. */
+		TIMERS
 	}
 
 	/** One measured step. */
@@ -92,6 +101,12 @@ public final class VesuvioBenchmark {
 	private static List<VesuvioConfig.Number> numbers = List.of();
 	/** The player's own values of {@link #numbers}, put back at the end. */
 	private static int[] savedNumbers = new int[0];
+	/** The player's own gpuPassTimers, put back at the end (not in {@link #toggles}: the steps set it). */
+	private static boolean savedGpuTimers;
+	/** GpuPassTimers' totals when the step's measuring began. */
+	private static GpuPassTimers.@Nullable Totals gpuStart;
+	/** The "GPU passes" table of the TIMERS step, once measured. */
+	private static @Nullable String gpuTable;
 	private static Result[] results = new Result[0];
 	private static List<VesuvioStats.Stat> stats = List.of();
 	private static @Nullable ClientLevel level;
@@ -143,13 +158,16 @@ public final class VesuvioBenchmark {
 		List<VesuvioConfig.Toggle> all = new ArrayList<>();
 		List<VesuvioConfig.Number> allNumbers = new ArrayList<>();
 		for (VesuvioConfig.Setting s : VesuvioConfig.all()) {
-			if (s instanceof VesuvioConfig.Toggle t) {
+			if (s instanceof VesuvioConfig.Toggle t && t != GpuPassTimers.SETTING) {
 				all.add(t);
 			} else if (s instanceof VesuvioConfig.Number n && !n.needsRestart && !"general".equals(n.page)) {
 				allNumbers.add(n);
 			}
 		}
 		toggles = List.copyOf(all);
+		savedGpuTimers = GpuPassTimers.SETTING.get();
+		gpuStart = null;
+		gpuTable = null;
 		saved = new boolean[toggles.size()];
 		for (int i = 0; i < toggles.size(); i++) {
 			saved[i] = toggles.get(i).get();
@@ -162,6 +180,9 @@ public final class VesuvioBenchmark {
 		List<Step> list = new ArrayList<>();
 		list.add(new Step("Vesuvio off", Kind.OFF, null));
 		list.add(new Step("Vesuvio on", Kind.ON, null));
+		if (!GpuPassTimers.unsupported()) {
+			list.add(new Step("GPU pass timers", Kind.TIMERS, null));
+		}
 		for (VesuvioConfig.Toggle t : toggles) {
 			if (t != VesuvioConfig.ENABLED && !t.needsRestart && !"general".equals(t.page)) {
 				list.add(new Step(t.key + (t.get() ? " off" : " on"), Kind.FLIP, t));
@@ -242,6 +263,7 @@ public final class VesuvioBenchmark {
 					encodeStartNs = SubmitTimers.encodeNsTotal;
 					waitStartNs = SubmitTimers.waitNsTotal;
 					submitsStart = SubmitTimers.submits;
+					gpuStart = GpuPassTimers.totals();
 				}
 				return;
 			}
@@ -255,7 +277,11 @@ public final class VesuvioBenchmark {
 				cpuSumNs += mc.getFrameTimeNs();
 			}
 			if (now - phaseStart >= measureNs) {
-				results[step] = result(steps.get(step).name);
+				Step measured = steps.get(step);
+				results[step] = result(measured.name);
+				if (measured.kind == Kind.TIMERS && gpuStart != null) {
+					gpuTable = GpuPassTimers.table(measured.name, gpuStart, GpuPassTimers.totals());
+				}
 				if (step + 1 < steps.size()) {
 					begin(step + 1, now);
 				} else {
@@ -379,6 +405,7 @@ public final class VesuvioBenchmark {
 			}
 		}
 		apply(target, numberTarget);
+		setGpuTimers(s.kind == Kind.TIMERS);
 		step = i;
 		settling = true;
 		phaseStart = now;
@@ -386,6 +413,15 @@ public final class VesuvioBenchmark {
 
 	private static void restore() {
 		apply(saved, savedNumbers);
+		setGpuTimers(savedGpuTimers);
+	}
+
+	/** gpuPassTimers on or off, telling listeners when it changed. Never saves. */
+	private static void setGpuTimers(boolean on) {
+		if (GpuPassTimers.SETTING.get() != on) {
+			GpuPassTimers.SETTING.set(on);
+			VesuvioChanges.changed(GpuPassTimers.SETTING);
+		}
 	}
 
 	/** Sets every toggle and number to its target, telling listeners about each one that changed. Never saves. */
@@ -474,6 +510,9 @@ public final class VesuvioBenchmark {
 				table.append(System.lineSeparator());
 			}
 		}
+		if (gpuTable != null) {
+			table.append(System.lineSeparator()).append(gpuTable);
+		}
 		double offFps = offMs > 0 ? 1000.0 / offMs : 0.0;
 		double onFps = onMs > 0 ? 1000.0 / onMs : 0.0;
 		Vesuvio.LOGGER.info("Vesuvio benchmark {}: off {} fps ({} ms), on {} fps ({} ms). {}{}{}",
@@ -528,7 +567,21 @@ public final class VesuvioBenchmark {
 				o.framerateLimit().get() >= 260 ? "none" : o.framerateLimit().get().toString(),
 				o.enableVsync().get() ? "on" : "off",
 				FabricLoader.getInstance().isModLoaded("etna") ? "installed" : "not installed",
-				steps == null ? 0 : steps.size() - 4);
+				flipSteps());
+	}
+
+	/** Steps that change one live setting. */
+	private static int flipSteps() {
+		List<Step> s = steps;
+		int n = 0;
+		if (s != null) {
+			for (Step step : s) {
+				if (step.kind == Kind.FLIP) {
+					n++;
+				}
+			}
+		}
+		return n;
 	}
 
 	private static String fmt(double ms) {
