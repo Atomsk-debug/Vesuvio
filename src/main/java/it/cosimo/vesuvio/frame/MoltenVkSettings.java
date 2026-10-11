@@ -28,11 +28,19 @@ import it.cosimo.vesuvio.Vesuvio;
  * <li>{@link #ASYNC_SUBMIT} (opt-in): MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS = false. MoltenVK turns the frame's
  * Vulkan commands into Metal on its own thread instead of inside vkQueueSubmit on the render thread. Helps only when
  * the CPU side is the limit; a less used MoltenVK path, so off by default.</li>
+ * <li>{@link #NO_ARGUMENT_BUFFERS} (opt-in, a benchmark experiment): MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS = 0.
+ * MoltenVK then binds each descriptor set's resources one by one into the Metal encoder instead of through a Metal
+ * argument buffer. The game writes a new descriptor set for nearly every draw, so either way may encode faster; the
+ * sign is unknown and only a benchmark can tell. Without argument buffers Metal allows at most 16 samplers per shader
+ * stage, which a shader pack with many textures can exceed. The game itself does not need descriptor indexing (not in
+ * VulkanFeatureSets), so the device is created as usual.</li>
  * </ul>
  */
 public final class MoltenVkSettings {
 	public static final VesuvioConfig.Toggle FAST_COMPILE = VesuvioConfig.toggle("frame", "fastStartupCompile", true, true);
 	public static final VesuvioConfig.Toggle ASYNC_SUBMIT = VesuvioConfig.toggle("frame", "asyncSubmit", false, true);
+	public static final VesuvioConfig.Toggle NO_ARGUMENT_BUFFERS = VesuvioConfig.toggle("frame", "metalArgumentBuffersOff",
+			false, true);
 
 	private static final String EXTENSION = "VK_EXT_layer_settings";
 	private static final String LAYER = "MoltenVK";
@@ -51,7 +59,8 @@ public final class MoltenVkSettings {
 	public static int createInstance(VkInstanceCreateInfo info, Creator create) {
 		boolean fastCompile = FAST_COMPILE.on();
 		boolean asyncSubmit = ASYNC_SUBMIT.on();
-		if (!fastCompile && !asyncSubmit) {
+		boolean noArgumentBuffers = NO_ARGUMENT_BUFFERS.on();
+		if (!fastCompile && !asyncSubmit && !noArgumentBuffers) {
 			status = "off";
 			return create.create(info);
 		}
@@ -60,7 +69,7 @@ public final class MoltenVkSettings {
 			return create.create(info);
 		}
 		try {
-			return createWithSettings(info, create, fastCompile, asyncSubmit);
+			return createWithSettings(info, create, fastCompile, asyncSubmit, noArgumentBuffers);
 		} catch (LinkageError | RuntimeException e) {
 			Vesuvio.LOGGER.warn("Vesuvio: could not pass MoltenVK settings, creating the instance as usual", e);
 			status = "failed";
@@ -69,7 +78,7 @@ public final class MoltenVkSettings {
 	}
 
 	private static int createWithSettings(VkInstanceCreateInfo info, Creator create, boolean fastCompile,
-			boolean asyncSubmit) {
+			boolean asyncSubmit, boolean noArgumentBuffers) {
 		if (!hasInstanceExtension(EXTENSION)) {
 			status = "no extension";
 			Vesuvio.LOGGER.info("Vesuvio: Vulkan driver has no {}, MoltenVK settings not passed", EXTENSION);
@@ -93,7 +102,7 @@ public final class MoltenVkSettings {
 				extensions.put(oldCount, stack.UTF8(EXTENSION));
 			}
 
-			int count = (fastCompile ? 1 : 0) + (asyncSubmit ? 1 : 0);
+			int count = (fastCompile ? 1 : 0) + (asyncSubmit ? 1 : 0) + (noArgumentBuffers ? 1 : 0);
 			VkLayerSettingEXT.Buffer settings = VkLayerSettingEXT.calloc(count, stack);
 			int i = 0;
 			StringBuilder applied = new StringBuilder();
@@ -104,6 +113,11 @@ public final class MoltenVkSettings {
 			if (asyncSubmit) {
 				bool(settings.get(i++), stack, "MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", false);
 				applied.append(applied.isEmpty() ? "" : ", ").append("asynchronous submits");
+			}
+			if (noArgumentBuffers) {
+				// MVKUseMetalArgumentBuffers is a 32-bit enum; 0 = MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS_NEVER.
+				uint(settings.get(i++), stack, "MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS", 0);
+				applied.append(applied.isEmpty() ? "" : ", ").append("no Metal argument buffers");
 			}
 			VkLayerSettingsCreateInfoEXT layerSettings = VkLayerSettingsCreateInfoEXT.calloc(stack)
 					.sType$Default()
@@ -137,6 +151,16 @@ public final class MoltenVkSettings {
 		setting.pLayerName(stack.UTF8(LAYER))
 				.pSettingName(stack.UTF8(name))
 				.type(EXTLayerSettings.VK_LAYER_SETTING_TYPE_BOOL32_EXT)
+				.pValues(MemoryUtil.memByteBuffer(v))
+				// After pValues: the count is in values, not bytes.
+				.valueCount(1);
+	}
+
+	private static void uint(VkLayerSettingEXT setting, MemoryStack stack, String name, int value) {
+		IntBuffer v = stack.ints(value);
+		setting.pLayerName(stack.UTF8(LAYER))
+				.pSettingName(stack.UTF8(name))
+				.type(EXTLayerSettings.VK_LAYER_SETTING_TYPE_UINT32_EXT)
 				.pValues(MemoryUtil.memByteBuffer(v))
 				// After pValues: the count is in values, not bytes.
 				.valueCount(1);

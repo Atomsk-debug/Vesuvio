@@ -9,6 +9,8 @@
   buffers of entities, particles and the GUI are made host-visible and written directly, skipping the staging buffer,
   2 to 4 GPU copies and their barriers a frame. Reuse still goes through the game's own per-frame buffer fences, so a
   buffer is never rewritten while a frame in flight reads it. Counter "vertex copies skipped".
+- No Metal Argument Buffers (Frame page, off, restart, macOS only): a benchmark knob that passes
+  MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS=0 to MoltenVK through the same layer settings as the other MoltenVK options.
 
 ## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now
