@@ -19,6 +19,14 @@
 - Less per-frame garbage: Clear Fusion makes its list of clears to send only when there is one (before, every render
   pass and texture copy made one while the GUI's depth clear waited), and a terrain draw-list reuse copies the kept
   section list into vanilla's in one go instead of adding thousands of entries one by one.
+- Compact Terrain Vertices (World page, off, restart): chunk meshes in a 20-byte vertex instead of vanilla's 28
+  (half-float positions, 16-bit unorm texture coordinates; colour and light unchanged): about 29% less terrain
+  graphics memory, upload bandwidth and GPU vertex fetch, most with Etna's 3072 shadow pass. No shader change: the
+  GPU's vertex fetch converts the formats. Blocks on the 1/16 grid draw exactly as before; other positions round
+  towards the middle of their 1/16 cell (never onto a block face, so water next to glass does not flicker), texture
+  coordinates round towards the middle of their quad (no sprite bleeding). A block atlas over 8192 switches the next
+  start to float texture coordinates (24 bytes). Works with Etna's terrain and shadow pipelines and with Fabric API's
+  Indigo renderer; face culling and the translucent sort read the half positions. Counter "terrain vertex bytes".
 
 ## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now
