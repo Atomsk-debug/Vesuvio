@@ -69,6 +69,8 @@ public final class DetailCulling {
 	private static final double BEAM_MARGIN_DEGREES = 20.0;
 	/** The eye moves up to about a block with view bobbing. */
 	private static final double BEAM_EYE_REACH = 1.0;
+	/** Sub-pixel tests: how far view bobbing can move the eye (bob is at most 0.1, the shift half a bob or a bob). */
+	private static final double EYE_SHIFT = 0.5;
 
 	private static final BlockPos.MutableBlockPos SCRATCH = new BlockPos.MutableBlockPos();
 
@@ -114,21 +116,41 @@ public final class DetailCulling {
 
 	/**
 	 * True if something no bigger than {@code size} blocks, whose every point is at least {@code distance} blocks from
-	 * the eye, is smaller than one pixel of the window at this frame's field of view. A small object at distance d seen
-	 * at an angle covers at most size / d radians in any screen direction (off-axis perspective stretches by 1/cos,
-	 * exactly what using the distance instead of the depth accounts for), and a radian is height/2 * m11 pixels.
+	 * the eye, is smaller than one pixel of the window at this frame's field of view, wherever it is on the screen.
+	 * <ul>
+	 * <li>Seen from at least {@code distance}, a thing of diameter {@code size} spans an angle of at most
+	 * 2 asin(size / (2 distance)).</li>
+	 * <li>The projection turns angles into screen distances by at most (height / 2) m11 / cos^2(t) pixels per radian at
+	 * the angle t from the view axis (the stretch towards the edges, largest along the radius), and every point that
+	 * reaches the window lies within the half-diagonal angle of the screen, so that angle bounds t. At 70 degrees and
+	 * 16:9 this is three times the centre's scale.</li>
+	 * <li>View bobbing and the hurt tilt rotate the scene in front of the same projection (no stretch) and move the eye
+	 * by a fraction of a block ({@link #EYE_SHIFT}). The nausea and portal effects stretch the picture: no culling
+	 * while they show.</li>
+	 * </ul>
 	 */
 	static boolean subPixel(double size, double distance, CameraRenderState camera) {
-		if (!(distance > 1.0)) {
+		distance -= EYE_SHIFT;
+		if (!(distance > 1.0) || camera.isPanoramicMode) {
 			return false;
 		}
 		Minecraft mc = Minecraft.getInstance();
-		int height = mc.gameRenderer.mainRenderTarget().height;
-		double m11 = camera.projectionMatrix.m11();
-		if (!(height > 0) || !(m11 > 0.0)) {
+		PlayerRenderState player = mc.gameRenderer.gameRenderState().levelRenderState.playerRenderState;
+		if (player.portalEffectIntensity > 0.0F || player.nauseaEffectIntensity > 0.0F) {
 			return false;
 		}
-		return 0.5 * height * m11 * size < distance;
+		int height = mc.gameRenderer.mainRenderTarget().height;
+		double m00 = camera.projectionMatrix.m00();
+		double m11 = camera.projectionMatrix.m11();
+		if (!(height > 0) || !(m00 > 0.0) || !(m11 > 0.0)) {
+			return false;
+		}
+		double tanX = 1.0 / m00;
+		double tanY = 1.0 / m11;
+		// 1 / cos^2 of the half-diagonal angle.
+		double edgeStretch = 1.0 + tanX * tanX + tanY * tanY;
+		double angle = 2.0 * Math.asin(Math.min(1.0, size / (2.0 * distance)));
+		return 0.5 * height * m11 * edgeStretch * angle < 1.0;
 	}
 
 	// ------------------------------------------------------------------ signs
