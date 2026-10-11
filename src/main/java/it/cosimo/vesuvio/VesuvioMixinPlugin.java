@@ -32,6 +32,10 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 			// entities
 			Map.entry("LevelExtractorMixin", List.of("EntityCullStateMixin", "BlockEntityCullStateMixin",
 					"EntityRendererInvoker", "FrustumInvoker")),
+			// culling
+			Map.entry("CullLevelExtractorMixin", List.of("CullEntityRendererInvoker", "FogRendererAccessor")),
+			Map.entry("CullLevelRendererMixin", List.of("FogRendererAccessor")),
+			Map.entry("FogParticleGroupMixin", List.of("ParticleAccessor")),
 			// faces
 			Map.entry("SectionCompilerMixin", List.of("SectionCompilerResultsMixin")),
 			Map.entry("CompiledSectionMeshMixin", List.of("SectionCompilerResultsMixin")),

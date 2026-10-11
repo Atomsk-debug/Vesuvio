@@ -25,6 +25,7 @@ effect the next time the game starts; all others apply live.
 | Skip Repeated Binds (`skipRedundantBinds`) | On | In each Vulkan render pass, the pipeline already bound is not bound again, and a new descriptor set (the textures and buffers a draw uses) is not made when the one already bound holds exactly the same ones. Saves CPU time per draw for entities, particles and the GUI (MoltenVK encodes each bind into Metal). Same picture. |
 | Fewer Water/Glass Re-sorts (`translucentSortThrottle`) | On | Far see-through sections are re-sorted only after you have moved far enough for it to matter. |
 | Clear Fusion (`clearFusion`) | On | A clear followed by drawing into the same picture becomes part of that drawing (one full write and read less), clears nothing can see are skipped, and post effects get no depth buffers they never read. Same picture. Counters: clears fused, dropped, split. |
+| Fog Culling (`fogCulling`) | On | Skips terrain, mobs, block entities and particles so deep in the fog that they would be plain fog colour anyway (under water, lava, powder snow, Blindness/Darkness, the Nether, boss fog). Uses the game's own fog distance each frame; in clear air nothing is skipped. Off by itself with Improved Transparency, near the world border, with debug overlays and while Etna Shaders draws. |
 
 ## Entities
 
@@ -33,6 +34,9 @@ effect the next time the game starts; all others apply live.
 | Entity Culling (`entityCulling`) | On | Skips drawing mobs, items and other entities hidden behind solid blocks (checked on a background thread). |
 | Block Entity Culling (`blockEntityCulling`) | On | Skips drawing chests, signs, banners and other block entities outside your view or behind solid blocks. |
 | Particle Culling (`particleCulling`) | On | Skips particles in places the game already knows you cannot see. |
+| Sign Text Culling (`signTextCulling`) | On | Skips sign text on the side facing away from you, and all of it once each letter is under one pixel. |
+| Item Frame Culling (`itemFrameCulling`) | On | Skips item frames when you are behind the solid wall they hang on, and the framed item or map once it is under one pixel. |
+| Beacon Beam Culling (`beaconBeamCulling`) | On | Skips beacon beams wholly outside your view (vanilla draws every beam every frame). |
 
 ## Memory (all need a restart)
 
@@ -60,6 +64,9 @@ Turned off automatically when FerriteCore or ModernFix is installed, since they 
 | Animate Only Visible Textures (`animatedTextures`) | On | Water, lava, fire, portal and other animated block textures are redrawn only while something on screen uses them. |
 | Reduce FPS When Idle (`idleFps`) | On | Caps the frame rate while the window is not focused, and draws almost nothing while it is minimized. |
 | Idle FPS Limit (`idleFpsLimit`) | 10 | Frame rate while the window is open but not focused (3 to 60). |
+| Treat Hidden Window as Minimized (`hiddenWindowFps`) | On | A hidden or fully covered window (macOS: Cmd+H, another Space, covered by other windows) draws almost nothing, like a minimized one. Only where the system reports it. |
+| Cap FPS When Paused (`pausedFps`) | On | Single player paused behind a menu: frame rate capped at the limit below. |
+| Paused FPS Limit (`pausedFpsLimit`) | 60 | Frame rate while paused behind a menu (10 to 240). |
 | Faster Shader Compiling (`fastStartupCompile`) | On, restart | macOS only: lets Metal compile shaders on more threads, so first-time stutters are shorter. |
 | Keep Compiled Shaders (`pipelineCache`) | On, restart | Saves the driver's compiled shaders (Vulkan pipeline cache) to `vesuvio-cache/` when you quit and reuses them next launch: faster start, no hitch the first time a new mob, effect or shader pass shows. Checked against the GPU and driver. Biggest gain on Windows. |
 | Asynchronous Submit (`asyncSubmit`) | Off, restart | macOS only, experimental: MoltenVK converts each frame to Metal on its own thread. Can help when the CPU is the limit. |

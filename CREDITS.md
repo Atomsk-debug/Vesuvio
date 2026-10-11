@@ -34,8 +34,13 @@ Ideas only, no code copied:
   EntityCulling. Independent implementation, no code copied from either.
 - Animate only the animated sprites that are visible (`frame/AnimatedTextures.java`): idea from Sodium
   (CaffeineMC, PolyForm Shield 1.0.0), own code and own visibility tracking.
-- Lower frame rate while unfocused, skip drawing while minimized (`frame/IdleFps.java`): idea from Dynamic FPS
-  (juliand665 and LostLuma, MIT), own code, nothing ported.
+- Lower frame rate while unfocused or paused behind a menu, skip drawing while minimized or hidden
+  (`frame/IdleFps.java`): idea from Dynamic FPS (juliand665 and LostLuma, MIT), own code, nothing ported.
+- Sign text, item frame and beacon beam culling (`culling/DetailCulling.java`): ideas from More Culling by
+  FX - PR0CESS (GPL-3.0, ideas only, no code read or copied); the sub-pixel and wall-projection tests are
+  Vesuvio's own.
+- Fog culling (`culling/FogCulling.java`): skipping what the fog fully covers, an old engine technique (and an idea
+  several Minecraft mods use); own code built on the game's own fog values.
 - MoltenVK settings through VK_EXT_layer_settings at instance creation (`frame/MoltenVkSettings.java`): the
   documented MoltenVK configuration parameters (Khronos MoltenVK, Apache 2.0), own code.
 - Entity section lookup by direct key instead of the sorted-set walk (`ticks/SectionLookup`): idea from Lithium

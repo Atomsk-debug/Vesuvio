@@ -106,7 +106,7 @@ public final class SectionDrawCache {
 			// Another caller (Etna's shadow pass): built as usual, and the kept main-view build stays.
 			return build.getAsInt();
 		}
-		if (!CACHE.on() || sectionDispatcher == null) {
+		if (!CACHE.on() || sectionDispatcher == null || it.cosimo.vesuvio.culling.FogCulling.mainViewCutting()) {
 			valid = false;
 			return build.getAsInt();
 		}

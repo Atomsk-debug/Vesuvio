@@ -33,6 +33,15 @@
 - Submit timers: F3 (`submit encode us`, `submit wait us`, `gpu bound`) and the benchmark table (`encode`, `wait`
   columns) show how much of each frame goes into `vkQueueSubmit` (MoltenVK's Metal encoding on the Mac) and into
   waiting for the graphics card.
+- Fog Culling (Rendering page, on): terrain sections, mobs, block entities and particles beyond the point where
+  the fog paints them plain fog colour are skipped (under water, lava, powder snow, Blindness/Darkness, the Nether,
+  boss fog), using the game's own fog distances of each frame. Main view only; off with Improved Transparency,
+  near the world border and while Etna Shaders draws.
+- Sign Text, Item Frame and Beacon Beam Culling (Entities page, on): back-side and sub-pixel sign text, item frames
+  behind the solid wall they hang on, sub-pixel framed items and maps, and beacon beams wholly out of view are
+  skipped. Ideas from More Culling (own code).
+- Frame page: Cap FPS When Paused (on, 60 fps in single player behind a menu) and Treat Hidden Window as Minimized
+  (on: a hidden or fully covered window draws like a minimized one, where the system reports it).
 
 ## 0.1.2
 - Benchmark: a run stopped early (a key, a click, a move) now keeps the steps it already measured, in latest.log
