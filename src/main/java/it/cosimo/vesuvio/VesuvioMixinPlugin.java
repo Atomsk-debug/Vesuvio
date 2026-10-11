@@ -44,7 +44,7 @@ public final class VesuvioMixinPlugin implements IMixinConfigPlugin {
 			Map.entry("LevelRendererDrawCacheMixin", List.of("UberAllocationsMixin", "LevelRendererFacesMixin")),
 			// frame
 			Map.entry("FrameSectionCompilerMixin", List.of("FrameSectionResultsMixin")),
-			Map.entry("FrameCompiledSectionMeshMixin", List.of("FrameSectionResultsMixin")),
+			Map.entry("FrameCompiledSectionMeshMixin", List.of("FrameSectionResultsMixin", "FrameSpriteContentsMixin")),
 			Map.entry("FrameSpriteContentsMixin", List.of("FrameAnimationStateMixin")),
 			Map.entry("FrameAnimationStateMixin", List.of("FrameSpriteContentsMixin")),
 			Map.entry("FrameAtlasSpriteMixin", List.of("FrameSpriteContentsMixin")),

@@ -261,10 +261,31 @@ public final class FogCulling {
 			setup(MAIN, state.cameraRenderState, improvedTransparency || state.renderWireframeTerrain, clouds,
 					sky.skybox, sky.hasSkyOccluder, sky.occluderStartAngle, sky.occluderEndAngle,
 					state.worldBorderRenderState.alpha > 0.0, gizmosThisFrame);
+			if (MAIN.active && !withinViewArea(MAIN)) {
+				// Rain, for one: a cut-off past every section vanilla can draw cuts nothing, and would only keep
+				// SectionDrawCache from reusing the lists (see mainViewCutting).
+				MAIN.active = false;
+			}
 		} catch (RuntimeException e) {
 			MAIN.active = false;
 		}
 		distanceLastFrame = MAIN.active ? (int) Math.sqrt(MAIN.cutoffSq) : 0;
+	}
+
+	/**
+	 * Whether a section of the view area (render distance chunks around the camera, the level's full height) can lie
+	 * past the cut-off. Too large a bound only keeps the cut on; too small one only draws what vanilla draws.
+	 */
+	private static boolean withinViewArea(View view) {
+		Minecraft minecraft = Minecraft.getInstance();
+		ClientLevel level = minecraft.level;
+		if (level == null) {
+			return true;
+		}
+		double horizontal = (minecraft.options.getEffectiveRenderDistance() + 2) * 16.0 + SECTION_REACH;
+		double vertical = Math.max(Math.abs(view.camY - level.getMinY()), Math.abs(view.camY - (level.getMaxY() + 1)))
+				+ SECTION_REACH;
+		return 2.0 * horizontal * horizontal + vertical * vertical > view.cutoffSq;
 	}
 
 	/**
