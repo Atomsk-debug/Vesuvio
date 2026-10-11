@@ -21,6 +21,7 @@
 		"vesuvio.memory.mixins.json",
 		"vesuvio.faces.mixins.json",
 		"vesuvio.entities.mixins.json",
+		"vesuvio.culling.mixins.json",
 		"vesuvio.frame.mixins.json",
 		"vesuvio.ticks.mixins.json",
 		"vesuvio.chunks.mixins.json"

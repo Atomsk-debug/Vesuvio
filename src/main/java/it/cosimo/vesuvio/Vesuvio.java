@@ -20,6 +20,7 @@ public final class Vesuvio implements ClientModInitializer {
 		it.cosimo.vesuvio.memory.MemoryBoost.init();
 		it.cosimo.vesuvio.faces.FaceCulling.init();
 		it.cosimo.vesuvio.entities.Culling.init();
+		it.cosimo.vesuvio.culling.CullingBoost.init();
 		it.cosimo.vesuvio.frame.FrameBoost.init();
 		WorldTicks.init();
 		it.cosimo.vesuvio.chunks.ChunkUpdates.init();

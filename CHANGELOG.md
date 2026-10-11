@@ -8,6 +8,15 @@
 - Keep Compiled Shaders (Frame page, on): vanilla compiles every render pipeline without a Vulkan pipeline cache,
   so the driver redoes all of it each launch. Vesuvio keeps one, saves it to `vesuvio-cache/` and reuses it:
   faster start and no first-use shader hitches after the first launch, mostly on Windows.
+- Fog Culling (Rendering page, on): terrain sections, mobs, block entities and particles beyond the point where
+  the fog paints them plain fog colour are skipped (under water, lava, powder snow, Blindness/Darkness, the Nether,
+  boss fog), using the game's own fog distances of each frame. Main view only; off with Improved Transparency,
+  near the world border and while Etna Shaders draws.
+- Sign Text, Item Frame and Beacon Beam Culling (Entities page, on): back-side and sub-pixel sign text, item frames
+  behind the solid wall they hang on, sub-pixel framed items and maps, and beacon beams wholly out of view are
+  skipped. Ideas from More Culling (own code).
+- Frame page: Cap FPS When Paused (on, 60 fps in single player behind a menu) and Treat Hidden Window as Minimized
+  (on: a hidden or fully covered window draws like a minimized one, where the system reports it).
 
 ## 0.1.2
 - Benchmark: a run stopped early (a key, a click, a move) now keeps the steps it already measured, in latest.log

@@ -14,7 +14,7 @@ import it.cosimo.vesuvio.frame.IdleFps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.sprite.AtlasManager;
 
-/** Minimized window: skip drawing (ticks, packets and sound still run every loop). */
+/** Minimized or hidden window: skip drawing (ticks, packets and sound still run every loop). */
 @Mixin(Minecraft.class)
 public abstract class FrameMinecraftMixin {
 	@Shadow

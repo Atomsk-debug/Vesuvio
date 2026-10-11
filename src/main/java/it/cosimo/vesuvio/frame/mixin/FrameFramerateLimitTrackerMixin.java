@@ -11,7 +11,7 @@ import com.mojang.blaze3d.platform.FramerateLimitTracker;
 import it.cosimo.vesuvio.frame.IdleFps;
 import net.minecraft.client.Minecraft;
 
-/** Unfocused window: cap the frame rate. */
+/** Unfocused or hidden window, single player paused behind a menu: cap the frame rate. */
 @Mixin(FramerateLimitTracker.class)
 public abstract class FrameFramerateLimitTrackerMixin {
 	@Shadow
@@ -20,6 +20,6 @@ public abstract class FrameFramerateLimitTrackerMixin {
 
 	@ModifyReturnValue(method = "getFramerateLimit", at = @At("RETURN"))
 	private int vesuvio$idleLimit(int vanilla) {
-		return IdleFps.limit(vanilla, this.minecraft.getWindow());
+		return IdleFps.limit(vanilla, this.minecraft);
 	}
 }
