@@ -66,6 +66,10 @@ public final class SignTextCache {
 	/** Glyphs may have changed (font set rebuilt or closed, world changed): every kept layout is dropped. */
 	public static void invalidate() {
 		fontGeneration++;
+		if (RenderSystem.isOnRenderThread()) {
+			// Let go of the kept layouts now (they point at the old glyphs), not at the next sign drawn.
+			generation();
+		}
 	}
 
 	/** A sign's lines as wrapped for one {@code getRenderMessages} array (kept on the SignText). */
