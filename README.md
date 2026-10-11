@@ -18,7 +18,7 @@ and uses less memory. It runs on its own or next to Etna, and Etna's shadows get
 
 Made first for Apple Silicon Macs (MoltenVK), and meant to work on Windows and Linux as well.
 
-> **Status: in development.** Version 0.2.0 is in testing. Each part below ships only once it has been
+> **Status: in development.** Version 0.3.0 is in testing. Each part below ships only once it has been
 > checked in game.
 
 ## Features

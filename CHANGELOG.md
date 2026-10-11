@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (in progress)
+## 0.3.0
 - Keep Framebuffers (Frame page, on): the Vulkan backend made a new VkFramebuffer for every render pass and destroyed
   it after the frame. Each one is now kept, keyed by render pass, attachment views and size, and reused; it goes when
   one of its views is closed (deferred like vanilla's), when more than 128 are kept, or with the device. Counters
