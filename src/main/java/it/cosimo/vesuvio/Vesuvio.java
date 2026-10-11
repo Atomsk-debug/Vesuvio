@@ -32,4 +32,13 @@ public final class Vesuvio implements ClientModInitializer {
 						.getFriendlyString()).orElse("?"),
 				VesuvioConfig.all().size(), VesuvioConfig.ENABLED.on() ? "on" : "off (master switch)");
 	}
+
+	/**
+	 * The client is changing worlds or leaving one (LevelChangeMixin). Each part drops what it still holds of the old
+	 * world; all of it is rebuilt from the new world as needed.
+	 */
+	public static void levelChanged() {
+		it.cosimo.vesuvio.faces.SectionDrawCache.release();
+		it.cosimo.vesuvio.clears.ClearFusion.release();
+	}
 }

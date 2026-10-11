@@ -89,6 +89,20 @@ public final class SectionDrawCache {
 		VesuvioStats.register("draw lists reused %", () -> reusedPercent);
 	}
 
+	/**
+	 * The world is changing or being left (Vesuvio.levelChanged, render thread): forgets the kept build and lets go
+	 * of the old world's sections, meshes, section infos and draw groups. The next main-view prepare builds as usual.
+	 */
+	public static void release() {
+		valid = false;
+		dispatcher = null;
+		Arrays.fill(sections, null);
+		Arrays.fill(meshes, null);
+		count = 0;
+		infos = new Object[0];
+		Arrays.fill(groups, null);
+	}
+
 	/** UberGpuBuffer (UberAllocationsMixin): an allocation was added, freed or dropped. */
 	public static void allocationsChanged() {
 		ALLOCATIONS.incrementAndGet();

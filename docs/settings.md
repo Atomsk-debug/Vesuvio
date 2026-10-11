@@ -64,7 +64,7 @@ Turned off automatically when FerriteCore or ModernFix is installed, since they 
 | Animate Only Visible Textures (`animatedTextures`) | On | Water, lava, fire, portal and other animated block textures are redrawn only while something on screen uses them. |
 | Reduce FPS When Idle (`idleFps`) | On | Caps the frame rate while the window is not focused, and draws almost nothing while it is minimized. |
 | Idle FPS Limit (`idleFpsLimit`) | 10 | Frame rate while the window is open but not focused (3 to 60). |
-| Treat Hidden Window as Minimized (`hiddenWindowFps`) | On | A hidden or fully covered window (macOS: Cmd+H, another Space, covered by other windows) draws almost nothing, like a minimized one. Only where the system reports it. |
+| Treat Hidden Window as Minimized (`hiddenWindowFps`) | On | A hidden or fully covered window (macOS: Cmd+H, another Space, covered by other windows) draws almost nothing, like a minimized one, once the system has reported it for half a second of normal frames (so a brief false report after a long load does not drop the frame rate). Only where the system reports it. |
 | Cap FPS When Paused (`pausedFps`) | On | Single player paused behind a menu: frame rate capped at the limit below. |
 | Paused FPS Limit (`pausedFpsLimit`) | 60 | Frame rate while paused behind a menu (10 to 240). |
 | Faster Shader Compiling (`fastStartupCompile`) | On, restart | macOS only: lets Metal compile shaders on more threads, so first-time stutters are shorter. |

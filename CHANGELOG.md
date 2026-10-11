@@ -11,6 +11,11 @@
   buffer is never rewritten while a frame in flight reads it. Counter "vertex copies skipped".
 - No Metal Argument Buffers (Frame page, off, restart, macOS only): a benchmark knob that passes
   MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS=0 to MoltenVK through the same layer settings as the other MoltenVK options.
+- Leaving or changing worlds no longer keeps the old world's sections, meshes and draw lists alive in the terrain
+  draw-list cache, nor the last render pass's targets in Clear Fusion (also let go at every submit).
+- Treat Hidden Window as Minimized: the hidden/occluded flag must now last half a second of loops (each loop counting
+  at most 100 ms, events polled every loop) before the frame rate drops, so a window SDL briefly reports as occluded
+  after a long stall (Wayland while a world loads) no longer runs at 1 fps for a moment.
 
 ## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now

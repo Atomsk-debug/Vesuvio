@@ -411,6 +411,21 @@ public final class ClearFusion {
 		beganHeight = area.extent().height();
 	}
 
+	/** Drops the remembered pass (its descriptor holds the pass's texture views). Render thread, outside any pass. */
+	private static void forgetPass() {
+		beganDescriptor = null;
+		beganFramebuffer = 0L;
+	}
+
+	/**
+	 * The world is changing or being left (Vesuvio.levelChanged, render thread, outside any pass): lets go of the last
+	 * pass's attachments. Pending clears stay: they are sent, fused or dropped as usual (only the GUI's dead depth
+	 * clears of the main target can still be pending here, and the main target outlives the world).
+	 */
+	public static void release() {
+		forgetPass();
+	}
+
 	// ---- everything else that can see a texture ----
 
 	/** A write, copy or read of these textures (either may be null) is about to be recorded: send their clears first. */
@@ -459,6 +474,8 @@ public final class ClearFusion {
 				emit(backend, send);
 			}
 		}
+		// No pass is open at a submit, so nothing can split the last one any more: let go of its attachments.
+		forgetPass();
 		fusedLastFrame = fused;
 		droppedLastFrame = dropped;
 		splitLastFrame = split;
