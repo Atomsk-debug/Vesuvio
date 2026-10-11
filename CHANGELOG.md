@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (in progress)
+## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now
   cleared by the render pass as it opens (LOAD_OP_CLEAR, same value, same pixels) instead of by a separate clear
   that writes the whole image and has the pass read it back; the GUI's dead depth clears are dropped; post chain
