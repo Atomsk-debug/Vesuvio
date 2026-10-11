@@ -89,10 +89,12 @@ public final class ChunkScheduler {
 	/**
 	 * Render thread, in place of vanilla's loop. Returns the list vanilla's loop should walk: {@code visible} when
 	 * both settings are off (vanilla does everything), otherwise an empty list (the work was done here).
+	 * {@code cache} is the region cache vanilla made for its loop: when the work is done here, vanilla's loop gets
+	 * nothing to walk, so the regions are made in its cache as that loop would have made them.
 	 */
 	public static ObjectArrayList<SectionRenderDispatcher.RenderSection> schedule(
 			ObjectArrayList<SectionRenderDispatcher.RenderSection> visible, LevelRenderer renderer, ClientLevel level,
-			SectionUpdateTracker tracker, LevelRenderState state, Vec3 cameraPos) {
+			SectionUpdateTracker tracker, LevelRenderState state, Vec3 cameraPos, RenderRegionCache cache) {
 		boolean limit = ChunkUpdates.SCHEDULER.on();
 		boolean skipEmpty = ChunkUpdates.SKIP_EMPTY.on() && !level.isDebug();
 		SectionRenderDispatcher dispatcher = renderer.sectionRenderDispatcher();
@@ -105,7 +107,6 @@ public final class ChunkScheduler {
 		int camX = Mth.floor(cameraPos.x);
 		int camY = Mth.floor(cameraPos.y);
 		int camZ = Mth.floor(cameraPos.z);
-		RenderRegionCache cache = new RenderRegionCache();
 		int scheduled = 0;
 		int empty = 0;
 		int candidates = 0;

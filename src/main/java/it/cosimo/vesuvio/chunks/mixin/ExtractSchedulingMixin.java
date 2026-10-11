@@ -5,8 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 
 import it.cosimo.vesuvio.chunks.ChunkScheduler;
@@ -15,6 +14,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.SectionUpdateTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.chunk.RenderRegionCache;
 import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
@@ -35,12 +35,16 @@ public abstract class ExtractSchedulingMixin {
 	@Final
 	private LevelRenderState levelRenderState;
 
-	@WrapOperation(method = "extract", at = @At(value = "INVOKE",
+	@Shadow
+	@Final
+	private LevelRenderer levelRenderer;
+
+	@ModifyExpressionValue(method = "extract", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/client/renderer/LevelRenderer;visibleSections()Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"))
-	private ObjectArrayList<SectionRenderDispatcher.RenderSection> vesuvio$scheduleSections(LevelRenderer renderer,
-			Operation<ObjectArrayList<SectionRenderDispatcher.RenderSection>> original,
-			@Local(argsOnly = true) Camera camera) {
-		ObjectArrayList<SectionRenderDispatcher.RenderSection> visible = original.call(renderer);
-		return ChunkScheduler.schedule(visible, renderer, level, sectionUpdateTracker, levelRenderState, camera.position());
+	private ObjectArrayList<SectionRenderDispatcher.RenderSection> vesuvio$scheduleSections(
+			ObjectArrayList<SectionRenderDispatcher.RenderSection> visible, @Local(argsOnly = true) Camera camera,
+			@Local RenderRegionCache cache) {
+		return ChunkScheduler.schedule(visible, levelRenderer, level, sectionUpdateTracker, levelRenderState,
+				camera.position(), cache);
 	}
 }

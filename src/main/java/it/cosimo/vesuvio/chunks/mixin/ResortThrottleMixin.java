@@ -3,8 +3,7 @@ package it.cosimo.vesuvio.chunks.mixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 
 import it.cosimo.vesuvio.chunks.TranslucentSort;
@@ -19,13 +18,11 @@ import net.minecraft.world.phys.Vec3;
  */
 @Mixin(LevelRenderer.class)
 public abstract class ResortThrottleMixin {
-	@WrapOperation(method = "scheduleResort", at = @At(value = "INVOKE",
+	@WrapWithCondition(method = "scheduleResort", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/client/renderer/chunk/SectionRenderDispatcher$RenderSection;resortTransparency()V"))
-	private void vesuvio$throttleResort(SectionRenderDispatcher.RenderSection section, Operation<Void> original,
+	private boolean vesuvio$throttleResort(SectionRenderDispatcher.RenderSection section,
 			@Local(argsOnly = true) TranslucencyPointOfView pointOfView, @Local(argsOnly = true) Vec3 cameraPos,
 			@Local(argsOnly = true, ordinal = 1) boolean isNearby) {
-		if (TranslucentSort.shouldResort(section, pointOfView, cameraPos, isNearby)) {
-			original.call(section);
-		}
+		return TranslucentSort.shouldResort(section, pointOfView, cameraPos, isNearby);
 	}
 }

@@ -13,15 +13,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.backend.api.RenderPassBackend;
 import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuTexture;
-import com.mojang.renderpearl.backend.vulkan.VulkanTransientMemory;
 
 import it.cosimo.vesuvio.frame.TransferBarriers;
 
@@ -139,11 +138,9 @@ public abstract class FrameTransferBarrierMixin {
 
 	// writeToBuffer / writeToTexture: uploadStaging only copies the bytes into transient memory on the CPU (no
 	// command), so the check can run after it and before vkCmdCopyBuffer / vkCmdCopyBufferToImage.
-	@WrapOperation(method = {"writeToBuffer", "writeToTexture"}, at = @At(value = "INVOKE",
+	@ModifyExpressionValue(method = {"writeToBuffer", "writeToTexture"}, at = @At(value = "INVOKE",
 			target = "Lcom/mojang/renderpearl/backend/vulkan/VulkanTransientMemory;uploadStaging(Ljava/nio/ByteBuffer;JI)Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;"))
-	private GpuBufferSlice vesuvio$checkStagingSource(VulkanTransientMemory memory, ByteBuffer data, long alignment,
-			int usage, Operation<GpuBufferSlice> original) {
-		GpuBufferSlice staging = original.call(memory, data, alignment, usage);
+	private GpuBufferSlice vesuvio$checkStagingSource(GpuBufferSlice staging) {
 		TransferBarriers.Tracker t = this.vesuvio$barriers;
 		if (t.defer) {
 			long src = ((VulkanGpuBuffer) staging.buffer()).vkBuffer();
@@ -156,15 +153,17 @@ public abstract class FrameTransferBarrierMixin {
 	}
 
 	// The barrier each tracked copy records after its command: held back when the copy was set up to defer it.
-	@WrapOperation(method = {"writeToBuffer", "copyToBuffer", "writeToTexture", "copyBufferToTexture"},
+	// (Per copy and upload, so these two hooks are a WrapWithCondition and a ModifyExpressionValue: no Operation
+	// argument array per call.)
+	@WrapWithCondition(method = {"writeToBuffer", "copyToBuffer", "writeToTexture", "copyBufferToTexture"},
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/renderpearl/backend/vulkan/VulkanCommandEncoder;memoryBarrier(Lorg/lwjgl/system/MemoryStack;)V"))
-	private void vesuvio$holdBarrier(VulkanCommandEncoder encoder, MemoryStack stack, Operation<Void> original) {
+	private boolean vesuvio$holdBarrier(VulkanCommandEncoder encoder, MemoryStack stack) {
 		TransferBarriers.Tracker t = this.vesuvio$barriers;
 		if (t.defer) {
 			t.commit();
-		} else {
-			original.call(encoder, stack);
+			return false;
 		}
+		return true;
 	}
 }
