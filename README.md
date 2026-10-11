@@ -31,8 +31,10 @@ Made first for Apple Silicon Macs (MoltenVK), and meant to work on Windows and L
 * Skips terrain, mobs and particles lost in thick fog (under water, in lava, in the Nether, with Blindness),
   sign text seen from behind, item frames behind their wall and beacon beams out of view.
 * Talks to the Vulkan renderer directly: clears are folded into the passes that follow them, back-to-back
-  uploads share one GPU barrier, repeated binds are skipped, and terrain draw lists are reused while nothing
-  changed.
+  uploads share one GPU barrier, repeated binds are skipped, framebuffers are kept instead of rebuilt every
+  pass, and terrain draw lists are reused while nothing changed.
+* On Apple silicon (shared memory): mob, particle and GUI vertices are written straight where the GPU reads
+  them, with no extra copy.
 
 **Every frame**
 * Updates animated textures (water, lava, fire, portals) only when they are on screen.
