@@ -16,6 +16,9 @@
 - Treat Hidden Window as Minimized: the hidden/occluded flag must now last half a second of loops (each loop counting
   at most 100 ms, events polled every loop) before the frame rate drops, so a window SDL briefly reports as occluded
   after a long stall (Wayland while a world loads) no longer runs at 1 fps for a moment.
+- Less per-frame garbage: Clear Fusion makes its list of clears to send only when there is one (before, every render
+  pass and texture copy made one while the GUI's depth clear waited), and a terrain draw-list reuse copies the kept
+  section list into vanilla's in one go instead of adding thousands of entries one by one.
 
 ## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now

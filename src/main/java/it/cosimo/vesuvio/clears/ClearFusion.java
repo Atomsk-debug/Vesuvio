@@ -230,7 +230,8 @@ public final class ClearFusion {
 		}
 		synchronized (LOCK) {
 			boolean on = CLEAR_FUSION.on();
-			List<Pending> send = new ArrayList<>(PENDING.size());
+			// Made only when something must be sent: most passes in the GUI phase find only a dead candidate.
+			List<Pending> send = null;
 			RenderPass.RenderArea area = descriptor.renderArea();
 			List<RenderPassDescriptor.Attachment<Optional<Vector4fc>>> colors = descriptor.colorAttachments();
 			List<RenderPassDescriptor.Attachment<Optional<Vector4fc>>> newColors = null;
@@ -256,7 +257,7 @@ public final class ClearFusion {
 						fused++;
 					}
 				} else {
-					send.add(pending);
+					send = sendLater(send, pending);
 				}
 			}
 			RenderPassDescriptor.Attachment<OptionalDouble> depthAttachment = descriptor.depthAttachment();
@@ -275,10 +276,10 @@ public final class ClearFusion {
 									OptionalDouble.of(pending.depthValue));
 							fused++;
 						} else {
-							send.add(pending);
+							send = sendLater(send, pending);
 						}
 					} else {
-						send.add(pending);
+						send = sendLater(send, pending);
 					}
 				}
 			}
@@ -287,11 +288,13 @@ public final class ClearFusion {
 				Pending pending = PENDING.get(i);
 				if (!on || !pending.deadCandidate) {
 					PENDING.remove(i);
-					send.add(pending);
+					send = sendLater(send, pending);
 				}
 			}
 			pendingCount = PENDING.size();
-			emit(backend, send);
+			if (send != null) {
+				emit(backend, send);
+			}
 			if (newColors == null && newDepth == depthAttachment) {
 				return descriptor;
 			}
@@ -434,16 +437,21 @@ public final class ClearFusion {
 			return;
 		}
 		synchronized (LOCK) {
-			List<Pending> send = new ArrayList<>(2);
 			Pending a = first != null ? remove(first) : null;
 			Pending b = second != null ? remove(second) : null;
+			boolean on = CLEAR_FUSION.on();
+			if (a == null && b == null && on) {
+				// Nothing of these textures pending (the usual case while only a dead candidate waits).
+				return;
+			}
+			List<Pending> send = new ArrayList<>(2);
 			if (a != null) {
 				send.add(a);
 			}
 			if (b != null) {
 				send.add(b);
 			}
-			if (!CLEAR_FUSION.on()) {
+			if (!on) {
 				// Switched off: send everything now rather than keep any of it.
 				send.addAll(PENDING);
 				PENDING.clear();
@@ -462,16 +470,18 @@ public final class ClearFusion {
 		if (pendingCount != 0) {
 			synchronized (LOCK) {
 				boolean on = CLEAR_FUSION.on() && RenderSystem.isOnRenderThread();
-				List<Pending> send = new ArrayList<>(PENDING.size());
+				List<Pending> send = null;
 				for (int i = PENDING.size() - 1; i >= 0; i--) {
 					Pending pending = PENDING.get(i);
 					if (!on || !pending.deadCandidate) {
 						PENDING.remove(i);
-						send.add(pending);
+						send = sendLater(send, pending);
 					}
 				}
 				pendingCount = PENDING.size();
-				emit(backend, send);
+				if (send != null) {
+					emit(backend, send);
+				}
 			}
 		}
 		// No pass is open at a submit, so nothing can split the last one any more: let go of its attachments.
@@ -498,6 +508,13 @@ public final class ClearFusion {
 	}
 
 	// ---- table ----
+
+	/** Adds a clear to the list of those to send, making the list on first use. */
+	private static List<Pending> sendLater(List<Pending> send, Pending pending) {
+		List<Pending> list = send != null ? send : new ArrayList<>(4);
+		list.add(pending);
+		return list;
+	}
 
 	private static void add(Pending pending) {
 		PENDING.add(pending);
