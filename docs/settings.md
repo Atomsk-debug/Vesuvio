@@ -71,6 +71,7 @@ Turned off automatically when FerriteCore or ModernFix is installed, since they 
 | Keep Compiled Shaders (`pipelineCache`) | On, restart | Saves the driver's compiled shaders (Vulkan pipeline cache) to `vesuvio-cache/` when you quit and reuses them next launch: faster start, no hitch the first time a new mob, effect or shader pass shows. Checked against the GPU and driver. Biggest gain on Windows. |
 | Asynchronous Submit (`asyncSubmit`) | Off, restart | macOS only, experimental: MoltenVK converts each frame to Metal on its own thread. Can help when the CPU is the limit. |
 | Merge Upload Barriers (`mergeTransferBarriers`) | On | Back-to-back copies to the graphics card that touch different memory share one full barrier instead of one each; the barrier is still recorded before anything that could use their data. Fewer GPU stalls and, on Mac, fewer Metal command groups when chunks load. |
+| Keep Framebuffers (`framebufferCache`) | On | The Vulkan framebuffer of each render pass (which pictures it draws into) is kept and reused while the same pictures are drawn into again, instead of made and thrown away every pass. Thrown away when one of its pictures is. Same picture. Counters: framebuffers reused, framebuffers kept. |
 
 ## World
 

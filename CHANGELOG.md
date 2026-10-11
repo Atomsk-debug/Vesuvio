@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 (in progress)
+- Keep Framebuffers (Frame page, on): the Vulkan backend made a new VkFramebuffer for every render pass and destroyed
+  it after the frame. Each one is now kept, keyed by render pass, attachment views and size, and reused; it goes when
+  one of its views is closed (deferred like vanilla's), when more than 128 are kept, or with the device. Counters
+  "framebuffers reused" and "framebuffers kept".
+
 ## 0.2.0
 - Clear Fusion (Rendering page, on): a texture cleared through the command encoder and then drawn into is now
   cleared by the render pass as it opens (LOAD_OP_CLEAR, same value, same pixels) instead of by a separate clear
